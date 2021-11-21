@@ -14,11 +14,11 @@ const Header: FC = () => {
   return (
     <Box display="flex" justifyContent="space-between">
       <Link href={rootPath}>
-        <Heading level={1} visualLevel={3} color="primary">
+        <Heading level={1} visualLevel={4} color="primary">
           <strong>{appName}</strong>
         </Heading>
       </Link>
-      <Heading level={2} visualLevel={3} color="secondary">
+      <Heading level={2} visualLevel={4} color="secondary">
         <strong>{currentRoute.title}</strong>
       </Heading>
     </Box>
