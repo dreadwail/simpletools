@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 
-import Home from '../components/Home';
+import Catalog from '../components/Catalog';
 import URLComposer from '../components/URLComposer';
 
 type Route = {
@@ -20,7 +20,8 @@ type Routing = {
 
 const root: Route = {
   path: '/',
-  element: <Home />,
+  title: 'Catalog',
+  element: <Catalog />,
 };
 
 const urlComposer: Route = {
