@@ -5,7 +5,7 @@ import { FC, ReactNode } from 'react';
 
 export type LayoutProps = {
   readonly header: ReactNode;
-  readonly navigation?: ReactNode;
+  readonly navigation: ReactNode;
 };
 
 const Layout: FC<LayoutProps> = ({ header, navigation, children }) => (
@@ -14,7 +14,7 @@ const Layout: FC<LayoutProps> = ({ header, navigation, children }) => (
       <Paper variant="outlined">
         <Box p={3}>
           <header>{header}</header>
-          {navigation && <nav>{navigation}</nav>}
+          <nav>{navigation}</nav>
           <main>{children}</main>
         </Box>
       </Paper>

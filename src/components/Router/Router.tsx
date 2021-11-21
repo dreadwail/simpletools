@@ -4,6 +4,7 @@ import { BrowserRouter, useLocation, Route, Switch } from 'react-router-dom';
 import useRouting from '../../hooks/useRouting';
 import Header from '../Header';
 import Layout from '../Layout';
+import Navigation from '../Navigation';
 import NotFound from '../NotFound';
 
 const PathChangeScrollToTop: FC = () => {
@@ -36,7 +37,7 @@ const Routes: FC = () => {
 const Router: FC = () => (
   <BrowserRouter>
     <PathChangeScrollToTop />
-    <Layout header={<Header />}>
+    <Layout header={<Header />} navigation={<Navigation />}>
       <Routes />
     </Layout>
   </BrowserRouter>

@@ -6,14 +6,14 @@ import URLComposer from '../components/URLComposer';
 
 type Route = {
   readonly path: string;
-  readonly title?: string;
+  readonly title: string;
   readonly element: ReactNode;
 };
 
 type Routes = Record<string, Route>;
 
 type Routing = {
-  readonly rootPath: string;
+  readonly rootRoute: Route;
   readonly currentRoute: Route;
   readonly routes: Routes;
 };
@@ -39,7 +39,7 @@ const useRouting = (): Routing => {
   const { pathname } = useLocation();
 
   return {
-    rootPath: root.path,
+    rootRoute: root,
     currentRoute: routes[pathname] ?? root,
     routes,
   };

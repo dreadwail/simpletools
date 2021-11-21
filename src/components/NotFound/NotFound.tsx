@@ -6,12 +6,12 @@ import Heading from '../Heading';
 import Link from '../Link';
 
 const NotFound: FC = () => {
-  const { rootPath } = useRouting();
+  const { rootRoute } = useRouting();
 
   return (
     <Box p={2}>
       <Heading level={3}>Not Found</Heading>
-      <Link href={rootPath}>Return to home</Link>
+      <Link href={rootRoute.path}>Return to home</Link>
     </Box>
   );
 };

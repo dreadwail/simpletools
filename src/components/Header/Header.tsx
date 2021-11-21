@@ -9,11 +9,11 @@ const defaultAppName = 'SimpleTools';
 const appName = process.env.REACT_APP_NAME ?? defaultAppName;
 
 const Header: FC = () => {
-  const { rootPath, currentRoute } = useRouting();
+  const { rootRoute, currentRoute } = useRouting();
 
   return (
     <Box display="flex" justifyContent="space-between">
-      <Link href={rootPath}>
+      <Link href={rootRoute.path}>
         <Heading level={1} visualLevel={4} color="primary">
           <strong>{appName}</strong>
         </Heading>

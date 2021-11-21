@@ -3,10 +3,11 @@ import { FC } from 'react';
 
 export type TextProps = {
   readonly color?: TypographyProps['color'];
+  readonly paragraph?: TypographyProps['paragraph'];
 };
 
-const Text: FC<TextProps> = ({ color, children }) => (
-  <Typography variant="body1" color={color} paragraph>
+const Text: FC<TextProps> = ({ color, paragraph, children }) => (
+  <Typography variant="body1" color={color} paragraph={paragraph}>
     {children}
   </Typography>
 );
