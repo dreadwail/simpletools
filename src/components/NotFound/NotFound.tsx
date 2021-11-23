@@ -1,5 +1,5 @@
 import Box from '@material-ui/core/Box';
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import useRouting from '../../hooks/useRouting';
 import Heading from '../Heading';

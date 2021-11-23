@@ -1,5 +1,5 @@
 import Typography, { TypographyProps } from '@material-ui/core/Typography';
-import { FC } from 'react';
+import type { FC } from 'react';
 
 type Level = 1 | 2 | 3 | 4 | 5 | 6;
 type LevelElement = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';

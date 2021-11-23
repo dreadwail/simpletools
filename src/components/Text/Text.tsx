@@ -1,5 +1,5 @@
 import Typography, { TypographyProps } from '@material-ui/core/Typography';
-import { FC } from 'react';
+import type { FC } from 'react';
 
 export type TextProps = {
   readonly color?: TypographyProps['color'];

@@ -1,6 +1,6 @@
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { ThemeProvider } from '@material-ui/core/styles';
-import { FC } from 'react';
+import type { FC } from 'react';
 import { Provider } from 'react-redux';
 
 import { store } from '../../state';

@@ -1,7 +1,7 @@
 import Box from '@material-ui/core/Box';
 import Breadcrumbs from '@material-ui/core/Breadcrumbs';
 import Divider from '@material-ui/core/Divider';
-import { FC } from 'react';
+import type { FC } from 'react';
 
 import useRouting from '../../hooks/useRouting';
 import Link from '../Link';

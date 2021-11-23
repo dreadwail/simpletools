@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux';
 
-import { AppState } from './types';
+import type { AppState } from './types';
 
 export default combineReducers<AppState>({});

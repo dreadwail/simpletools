@@ -1,7 +1,7 @@
 import Box from '@material-ui/core/Box';
 import Container from '@material-ui/core/Container';
 import Paper from '@material-ui/core/Paper';
-import { FC, ReactNode } from 'react';
+import type { FC, ReactNode } from 'react';
 
 export type LayoutProps = {
   readonly header: ReactNode;

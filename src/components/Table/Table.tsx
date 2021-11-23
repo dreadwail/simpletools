@@ -6,7 +6,7 @@ import MaterialTableCell from '@material-ui/core/TableCell';
 import MaterialTableContainer from '@material-ui/core/TableContainer';
 import MaterialTableHead from '@material-ui/core/TableHead';
 import MaterialTableRow from '@material-ui/core/TableRow';
-import { FC } from 'react';
+import type { FC } from 'react';
 
 const TableHead: FC = ({ children }) => <MaterialTableHead>{children}</MaterialTableHead>;
 const TableBody: FC = ({ children }) => <MaterialTableBody>{children}</MaterialTableBody>;
