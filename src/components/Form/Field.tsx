@@ -1,44 +1,64 @@
 import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
-import { FC, useCallback } from 'react';
+import { FC, useCallback, useMemo } from 'react';
 
-import type { FieldDeclaration, Value } from './types';
+import type { Error, FieldDeclaration, OnChangeHandler, Value } from './types';
 
-type FieldProps = FieldDeclaration & {
-  readonly hasError: boolean;
+const DEFAULT_HELPER_TEXT = ' ';
+
+export type FieldProps = FieldDeclaration & {
+  readonly error: Error;
   readonly value: Value;
+  readonly onChange: OnChangeHandler;
   readonly fullWidth: boolean;
-  readonly onChange?: (value: Value) => void;
 };
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 const Field: FC<FieldProps> = ({
+  name,
   required,
   label,
   helperText,
   prefix,
   suffix,
   value,
-  hasError,
+  error,
   onChange,
   fullWidth,
 }) => {
   const onChangeHandler = useCallback(
-    (event: TextFieldChangeEvent) => {
-      if (onChange) {
+    (event?: TextFieldChangeEvent) => {
+      // The event can be absent. See: https://v4.mui.com/api/input-base/#props
+      if (onChange && event) {
         const newValue = event.target.value;
-        onChange(newValue);
+        onChange(name, newValue);
       }
     },
-    [onChange]
+    [onChange, name]
   );
+
+  const adjustedHelperText = useMemo((): string => {
+    if (error) {
+      return error;
+    }
+    if (helperText) {
+      return helperText;
+    }
+    if (!value) {
+      if (required) {
+        return 'Required';
+      }
+      return 'Optional';
+    }
+    return DEFAULT_HELPER_TEXT;
+  }, [error, helperText, value, required]);
 
   return (
     <TextField
       fullWidth={fullWidth}
       size="small"
-      margin="dense"
+      margin="none"
       variant="outlined"
       label={label}
       InputProps={{
@@ -46,8 +66,8 @@ const Field: FC<FieldProps> = ({
         endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
       }}
       value={value}
-      error={hasError}
-      helperText={helperText}
+      error={!!error}
+      helperText={adjustedHelperText}
       required={required}
       onChange={onChangeHandler}
     />

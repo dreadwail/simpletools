@@ -38,81 +38,87 @@ https://url.spec.whatwg.org/#urls
 //   | 'path'
 //   | 'queryParams'
 //   | 'fragment';
-const config: FormConfig = [
-  {
-    label: 'Connection',
-    fields: [
-      {
-        name: 'scheme',
-        required: true,
-        label: 'Scheme (Protocol)',
-        suffix: '://',
-        validate: value => {
-          if (/^(https?|http|ftp|mailto)$/.test(value)) {
-            return null;
-          }
-          return 'Invalid scheme/protocol.';
+const config: FormConfig = {
+  direction: Direction.HORIZONTAL,
+  blocks: [
+    {
+      label: 'Connection',
+      direction: Direction.VERTICAL,
+      fields: [
+        {
+          name: 'scheme',
+          required: true,
+          label: 'Scheme (Protocol)',
+          suffix: '://',
+          validate: value => {
+            if (/^(https?|http|ftp|mailto)$/.test(value)) {
+              return null;
+            }
+            return 'Invalid scheme/protocol.';
+          },
         },
-      },
-      {
-        name: 'host',
-        required: true,
-        label: 'Host',
-        validate: _value => null,
-      },
-      {
-        name: 'port',
-        required: false,
-        label: 'Port',
-        validate: _value => null,
-      },
-    ],
-  },
-  {
-    label: 'Resource',
-    fields: [
-      {
-        name: 'path',
-        required: true,
-        label: 'Path',
-        validate: _value => null,
-      },
-      {
-        name: 'queryParams',
-        required: false,
-        label: 'Query Parameters',
-        validate: _value => null,
-      },
-      {
-        name: 'fragment',
-        required: false,
-        label: 'Fragment (Hash)',
-        validate: _value => null,
-      },
-    ],
-  },
-  {
-    label: 'Credentials',
-    fields: [
-      {
-        name: 'username',
-        required: false,
-        label: 'Username',
-        validate: _value => null,
-      },
-      {
-        name: 'password',
-        required: false,
-        label: 'Password',
-        validate: _value => null,
-      },
-    ],
-  },
-];
+        {
+          name: 'host',
+          required: true,
+          label: 'Host',
+          validate: _value => null,
+        },
+        {
+          name: 'port',
+          required: false,
+          label: 'Port',
+          validate: _value => null,
+        },
+      ],
+    },
+    {
+      label: 'Resource',
+      direction: Direction.VERTICAL,
+      fields: [
+        {
+          name: 'path',
+          required: true,
+          label: 'Path',
+          validate: _value => null,
+        },
+        {
+          name: 'queryParams',
+          required: false,
+          label: 'Query Parameters',
+          validate: _value => null,
+        },
+        {
+          name: 'fragment',
+          required: false,
+          label: 'Fragment (Hash)',
+          validate: _value => null,
+        },
+      ],
+    },
+    {
+      label: 'Credentials',
+      direction: Direction.VERTICAL,
+      fields: [
+        {
+          name: 'username',
+          required: false,
+          label: 'Username',
+          validate: _value => null,
+        },
+        {
+          name: 'password',
+          required: false,
+          label: 'Password',
+          validate: _value => null,
+        },
+      ],
+    },
+  ],
+};
 
 const URLComposer: FC = () => (
   <div>
-    <Form direction={Direction.VERTICAL} config={config} onSubmitSuccess={() => {}} />
+    <Form config={config} />
   </div>
 );
 
