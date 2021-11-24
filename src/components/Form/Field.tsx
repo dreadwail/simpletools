@@ -2,7 +2,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import TextField from '@material-ui/core/TextField';
 import { FC, useCallback, useMemo } from 'react';
 
-import type { Error, FieldDeclaration, OnChangeHandler, Value } from './types';
+import type { Error, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
 
@@ -10,6 +10,7 @@ export type FieldProps = FieldDeclaration & {
   readonly error: Error;
   readonly value: Value;
   readonly onChange: OnChangeHandler;
+  readonly onBlur: OnBlurHandler;
   readonly fullWidth: boolean;
 };
 
@@ -25,17 +26,28 @@ const Field: FC<FieldProps> = ({
   value,
   error,
   onChange,
+  onBlur,
   fullWidth,
 }) => {
   const onChangeHandler = useCallback(
     (event?: TextFieldChangeEvent) => {
       // The event can be absent. See: https://v4.mui.com/api/input-base/#props
-      if (onChange && event) {
+      if (event) {
         const newValue = event.target.value;
         onChange(name, newValue);
       }
     },
     [onChange, name]
+  );
+
+  const onBlurHandler = useCallback(
+    (event?: TextFieldChangeEvent) => {
+      // The event can be absent. See: https://v4.mui.com/api/input-base/#props
+      if (event) {
+        onBlur(name);
+      }
+    },
+    [onBlur, name]
   );
 
   const adjustedHelperText = useMemo((): string => {
@@ -70,6 +82,7 @@ const Field: FC<FieldProps> = ({
       helperText={adjustedHelperText}
       required={required}
       onChange={onChangeHandler}
+      onBlur={onBlurHandler}
     />
   );
 };

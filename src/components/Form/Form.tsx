@@ -5,13 +5,21 @@ import Flex from '../Flex';
 
 import FieldBlock from './FieldBlock';
 import FieldSet from './FieldSet';
-import type { Error, FieldDeclaration, FormConfig, OnChangeHandler, Value } from './types';
+import type {
+  Error,
+  FieldDeclaration,
+  FormConfig,
+  OnBlurHandler,
+  OnChangeHandler,
+  Value,
+} from './types';
 import { Direction } from './types';
 
 type FieldName = string;
-type Values = Record<FieldName, Value>;
-type Errors = Record<FieldName, Error>;
 type FieldsByName = Record<FieldName, FieldDeclaration>;
+
+export type Values = Record<FieldName, Value>;
+export type Errors = Record<FieldName, Error>;
 
 type OnChangePayload = {
   readonly values: Values;
@@ -20,8 +28,10 @@ type OnChangePayload = {
 
 export type FormProps = {
   readonly config: FormConfig;
-  readonly onChange?: (payload: OnChangePayload) => void;
+  readonly onChange: (payload: OnChangePayload) => void;
 };
+
+const normalizeValue = (value: Value): string => value ?? '';
 
 const Form: FC<FormProps> = ({ config, onChange }) => {
   const [values, setValues] = useState<Values>({});
@@ -38,15 +48,20 @@ const Form: FC<FormProps> = ({ config, onChange }) => {
     return fields.reduce<FieldsByName>((memo, field) => ({ ...memo, [field.name]: field }), {});
   }, [config.blocks]);
 
-  const onChangeField = useCallback<OnChangeHandler>(
-    (name, value) => {
-      const normalizedValue = value ?? '';
-      setValues(oldValues => ({ ...oldValues, [name]: normalizedValue }));
+  const onChangeField = useCallback<OnChangeHandler>((name, value) => {
+    const normalizedValue = normalizeValue(value);
+    setValues(oldValues => ({ ...oldValues, [name]: normalizedValue }));
+  }, []);
 
+  const onBlurField = useCallback<OnBlurHandler>(
+    name => {
       const field = fieldsByName[name];
       if (!field) {
         return;
       }
+
+      const value = values[field.name];
+      const normalizedValue = normalizeValue(value);
 
       if (field.required && normalizedValue === '') {
         setErrors(oldErrors => ({ ...oldErrors, [name]: 'Required' }));
@@ -61,64 +76,39 @@ const Form: FC<FormProps> = ({ config, onChange }) => {
         }
       }
     },
-    [fieldsByName]
+    [fieldsByName, values]
   );
 
-  // const onChangeHandlers = useMemo(
-  //   () =>
-  //     fields.reduce<OnChangeHandlers>(
-  //       (handlers, field) => ({
-  //         ...handlers,
-  //         [field.name]: (value: Value) => {
-  //           const normalizedValue = value ?? '';
-  //           setValues(oldValues => ({ ...oldValues, [field.name]: normalizedValue }));
-
-  //           if (field.required && normalizedValue === '') {
-  //             setErrors(oldErrors => ({ ...oldErrors, [field.name]: 'Required' }));
-  //           } else if (normalizedValue === '') {
-  //             setErrors(oldErrors => ({ ...oldErrors, [field.name]: null }));
-  //           } else {
-  //             const error = field.validate?.(normalizedValue);
-  //             if (error) {
-  //               setErrors(oldErrors => ({ ...oldErrors, [field.name]: error }));
-  //             } else {
-  //               setErrors(oldErrors => ({ ...oldErrors, [field.name]: null }));
-  //             }
-  //           }
-  //         },
-  //       }),
-  //       {}
-  //     ),
-  //   [fields]
-  // );
-
   return (
-    <>
-      <Flex flexDirection={config.direction === Direction.HORIZONTAL ? 'row' : 'column'} gap={5}>
-        {config.blocks.map(({ label, ...block }, index) => {
-          const fieldBlock = (
-            <FieldBlock {...block} values={values} errors={errors} onChangeField={onChangeField} />
-          );
+    <Flex flexDirection={config.direction === Direction.HORIZONTAL ? 'row' : 'column'} gap={5}>
+      {config.blocks.map(({ label, ...block }, index) => {
+        const fieldBlock = (
+          <FieldBlock
+            {...block}
+            values={values}
+            errors={errors}
+            onChangeField={onChangeField}
+            onBlurField={onBlurField}
+          />
+        );
 
-          if (label) {
-            return (
-              <Box key={index} mb={2}>
-                <FieldSet label={label} direction={block.direction}>
-                  {fieldBlock}
-                </FieldSet>
-              </Box>
-            );
-          }
-
+        if (label) {
           return (
             <Box key={index} mb={2}>
-              {fieldBlock}
+              <FieldSet label={label} direction={block.direction}>
+                {fieldBlock}
+              </FieldSet>
             </Box>
           );
-        })}
-      </Flex>
-      <pre>{JSON.stringify({ values, errors }, null, 2)}</pre>
-    </>
+        }
+
+        return (
+          <Box key={index} mb={2}>
+            {fieldBlock}
+          </Box>
+        );
+      })}
+    </Flex>
   );
 };
 

@@ -1,6 +1,6 @@
-import type { FC } from 'react';
+import { FC, useCallback, useMemo, useState } from 'react';
 
-import Form, { FormConfig, Direction } from '../Form';
+import Form, { FormConfig, FormProps, Direction, Errors, Values } from '../Form';
 
 /*
 form inputs (common)
@@ -116,10 +116,32 @@ const config: FormConfig = {
   ],
 };
 
-const URLComposer: FC = () => (
-  <div>
-    <Form config={config} />
-  </div>
-);
+const URLComposer: FC = () => {
+  const [values, setValues] = useState<Values>({});
+  const [errors, setErrors] = useState<Errors>({});
+
+  const onChange = useCallback<FormProps['onChange']>(payload => {
+    setValues(payload.values);
+    setErrors(payload.errors);
+  }, []);
+
+  const url = useMemo(() => {
+    const hasErrors = Object.values(errors).filter(val => val).length > 0;
+    if (hasErrors) {
+      return 'Invalid';
+    }
+    const { scheme, host, port, path /* , queryParams, fragment */, username, password } = values;
+    const credentials = [username, password].filter(val => val).join(':');
+    const authority = [host, port].filter(val => val).join(':');
+    return [scheme, credentials, authority, path].join('');
+  }, [values, errors]);
+
+  return (
+    <div>
+      <Form config={config} onChange={onChange} />
+      <pre>{JSON.stringify({ values, errors, url }, null, 2)}</pre>
+    </div>
+  );
+};
 
 export default URLComposer;
