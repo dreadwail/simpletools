@@ -5,11 +5,10 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import type { FC } from 'react';
 
-import type { Direction } from './types';
+import type { BlockDeclaration } from './types';
 
-type FieldSetProps = {
+type FieldSetProps = Omit<BlockDeclaration, 'blocks'> & {
   readonly label: string;
-  readonly direction: Direction;
 };
 
 const FieldSet: FC<FieldSetProps> = ({ label, children }) => (

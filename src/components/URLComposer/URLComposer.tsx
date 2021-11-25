@@ -1,6 +1,13 @@
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import Form, { FormConfig, FormProps, Direction, Errors, Values } from '../Form';
+import Form, {
+  BlockDeclaration,
+  FieldDeclaration,
+  FormProps,
+  Direction,
+  Errors,
+  Values,
+} from '../Form';
 
 /*
 form inputs (common)
@@ -29,89 +36,102 @@ https://url.spec.whatwg.org/#urls
 
 */
 
-// type FieldName =
-//   | 'scheme'
-//   | 'username'
-//   | 'password'
-//   | 'host'
-//   | 'port'
-//   | 'path'
-//   | 'queryParams'
-//   | 'fragment';
-const config: FormConfig = {
+const connectionFields: FieldDeclaration[] = [
+  {
+    name: 'scheme',
+    required: true,
+    label: 'Scheme (Protocol)',
+    suffix: '://',
+    validate: value => {
+      if (/^(https?|http|ftp|mailto)$/.test(value)) {
+        return null;
+      }
+      return 'Invalid scheme/protocol.';
+    },
+  },
+  {
+    name: 'host',
+    required: true,
+    label: 'Host',
+    validate: _value => null,
+  },
+  {
+    name: 'port',
+    required: false,
+    label: 'Port',
+    validate: _value => null,
+  },
+];
+
+const resourceFields: FieldDeclaration[] = [
+  {
+    name: 'path',
+    required: true,
+    label: 'Path',
+    validate: _value => null,
+  },
+  {
+    name: 'queryParams',
+    required: false,
+    label: 'Query Parameters',
+    validate: _value => null,
+  },
+  {
+    name: 'fragment',
+    required: false,
+    label: 'Fragment (Hash)',
+    validate: _value => null,
+  },
+];
+
+const credentialsFields: FieldDeclaration[] = [
+  {
+    name: 'username',
+    required: false,
+    label: 'Username',
+    validate: _value => null,
+  },
+  {
+    name: 'password',
+    required: false,
+    label: 'Password',
+    validate: _value => null,
+  },
+];
+
+const block: BlockDeclaration = {
   direction: Direction.HORIZONTAL,
   blocks: [
     {
-      label: 'Connection',
       direction: Direction.VERTICAL,
-      fields: [
+      blocks: [
         {
-          name: 'scheme',
-          required: true,
-          label: 'Scheme (Protocol)',
-          suffix: '://',
-          validate: value => {
-            if (/^(https?|http|ftp|mailto)$/.test(value)) {
-              return null;
-            }
-            return 'Invalid scheme/protocol.';
-          },
+          label: 'Connection',
+          direction: Direction.HORIZONTAL,
+          blocks: connectionFields,
         },
         {
-          name: 'host',
-          required: true,
-          label: 'Host',
-          validate: _value => null,
+          label: 'Resource',
+          direction: Direction.VERTICAL,
+          blocks: resourceFields,
         },
         {
-          name: 'port',
-          required: false,
-          label: 'Port',
-          validate: _value => null,
-        },
-      ],
-    },
-    {
-      label: 'Resource',
-      direction: Direction.VERTICAL,
-      fields: [
-        {
-          name: 'path',
-          required: true,
-          label: 'Path',
-          validate: _value => null,
-        },
-        {
-          name: 'queryParams',
-          required: false,
-          label: 'Query Parameters',
-          validate: _value => null,
-        },
-        {
-          name: 'fragment',
-          required: false,
-          label: 'Fragment (Hash)',
-          validate: _value => null,
+          label: 'Blah',
+          direction: Direction.HORIZONTAL,
+          blocks: [
+            {
+              label: 'Foo',
+              direction: Direction.HORIZONTAL,
+              blocks: connectionFields,
+            },
+          ],
         },
       ],
     },
     {
       label: 'Credentials',
       direction: Direction.VERTICAL,
-      fields: [
-        {
-          name: 'username',
-          required: false,
-          label: 'Username',
-          validate: _value => null,
-        },
-        {
-          name: 'password',
-          required: false,
-          label: 'Password',
-          validate: _value => null,
-        },
-      ],
+      blocks: credentialsFields,
     },
   ],
 };
@@ -138,7 +158,7 @@ const URLComposer: FC = () => {
 
   return (
     <div>
-      <Form config={config} onChange={onChange} />
+      <Form fields={block} onChange={onChange} />
       <pre>{JSON.stringify({ values, errors, url }, null, 2)}</pre>
     </div>
   );

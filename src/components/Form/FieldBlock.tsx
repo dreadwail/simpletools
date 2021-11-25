@@ -4,40 +4,77 @@ import type { FC } from 'react';
 import Flex from '../Flex';
 
 import Field from './Field';
-import type { Error, FieldBlockDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
-import { Direction } from './types';
+import FieldSet from './FieldSet';
+import {
+  Direction,
+  Error,
+  FieldDeclaration,
+  BlockDeclaration,
+  OnBlurHandler,
+  OnChangeHandler,
+  Value,
+} from './types';
 
 type FieldName = string;
 
-type FieldBlockProps = Omit<FieldBlockDeclaration, 'label'> & {
+type FieldBlockProps = {
+  readonly block: BlockDeclaration | FieldDeclaration;
   readonly values: Record<FieldName, Value>;
   readonly errors: Record<FieldName, Error>;
   readonly onChangeField: OnChangeHandler;
   readonly onBlurField: OnBlurHandler;
 };
 
-const FieldBlock: FC<FieldBlockProps> = ({
-  fields,
-  values,
-  errors,
-  onChangeField,
-  onBlurField,
-  direction,
-}) => (
-  <Flex flexDirection={direction === Direction.HORIZONTAL ? 'row' : 'column'} gap={5}>
-    {fields.map(field => (
-      <Box key={field.name} mb={1} flexGrow={1}>
+const isFieldDeclaration = (
+  block: FieldDeclaration | BlockDeclaration
+): block is FieldDeclaration => !!(block as FieldDeclaration).name;
+
+const FieldBlock: FC<FieldBlockProps> = ({ block, values, errors, onChangeField, onBlurField }) => {
+  if (isFieldDeclaration(block)) {
+    return (
+      <Box mb={1} flexGrow={1}>
         <Field
-          {...field}
-          error={errors[field.name]}
-          value={values[field.name]}
+          {...block}
+          error={errors[block.name]}
+          value={values[block.name]}
           onChange={onChangeField}
           onBlur={onBlurField}
           fullWidth
         />
       </Box>
-    ))}
-  </Flex>
-);
+    );
+  }
+
+  const blocks = (
+    <Flex
+      flexDirection={block.direction === Direction.HORIZONTAL ? 'row' : 'column'}
+      gap={5}
+      flexGrow={1}
+    >
+      {block.blocks.map((subBlock, index) => (
+        <FieldBlock
+          key={index}
+          block={subBlock}
+          values={values}
+          errors={errors}
+          onChangeField={onChangeField}
+          onBlurField={onBlurField}
+        />
+      ))}
+    </Flex>
+  );
+
+  if (block.label) {
+    return (
+      <Box flexGrow={1}>
+        <FieldSet direction={block.direction} label={block.label}>
+          {blocks}
+        </FieldSet>
+      </Box>
+    );
+  }
+
+  return blocks;
+};
 
 export default FieldBlock;

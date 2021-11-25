@@ -1,5 +1,10 @@
+export type FieldName = string;
+
 export type Value = string | null | undefined;
 export type Error = string | null | undefined;
+
+export type Values = Record<FieldName, Value>;
+export type Errors = Record<FieldName, Error>;
 
 export enum Direction {
   HORIZONTAL = 'horizontal',
@@ -16,15 +21,10 @@ export type FieldDeclaration = {
   readonly validate?: (value: string) => string | null;
 };
 
-export type FieldBlockDeclaration = {
+export type BlockDeclaration = {
+  readonly direction: Direction;
   readonly label?: string;
-  readonly direction: Direction;
-  readonly fields: FieldDeclaration[];
-};
-
-export type FormConfig = {
-  readonly direction: Direction;
-  readonly blocks: FieldBlockDeclaration[];
+  readonly blocks: (FieldDeclaration | BlockDeclaration)[];
 };
 
 export type OnChangeHandler = (name: FieldDeclaration['name'], value: Value) => void;
