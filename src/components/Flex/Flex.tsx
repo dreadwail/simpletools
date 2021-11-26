@@ -3,8 +3,8 @@ import { style } from '@material-ui/system';
 import type { FC } from 'react';
 import styled from 'styled-components';
 
-type FlexProps = BoxProps & {
-  readonly gap: number | string;
+export type FlexProps = BoxProps & {
+  readonly gap?: number | string;
 };
 
 const gapStyle = style({

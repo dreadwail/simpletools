@@ -11,7 +11,6 @@ export type FieldProps = FieldDeclaration & {
   readonly value: Value;
   readonly onChange: OnChangeHandler;
   readonly onBlur: OnBlurHandler;
-  readonly fullWidth: boolean;
 };
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
@@ -27,7 +26,6 @@ const Field: FC<FieldProps> = ({
   error,
   onChange,
   onBlur,
-  fullWidth,
 }) => {
   const onChangeHandler = useCallback(
     (event?: TextFieldChangeEvent) => {
@@ -68,7 +66,7 @@ const Field: FC<FieldProps> = ({
 
   return (
     <TextField
-      fullWidth={fullWidth}
+      fullWidth
       size="small"
       margin="none"
       variant="outlined"

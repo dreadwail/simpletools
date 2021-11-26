@@ -7,7 +7,7 @@ import type { FC } from 'react';
 
 import type { BlockDeclaration } from './types';
 
-type FieldSetProps = Omit<BlockDeclaration, 'blocks'> & {
+type FieldSetProps = Omit<BlockDeclaration, 'blocks' | 'width'> & {
   readonly label: string;
 };
 

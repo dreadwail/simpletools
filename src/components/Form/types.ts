@@ -11,8 +11,18 @@ export enum Direction {
   VERTICAL = 'vertical',
 }
 
+export enum Width {
+  THIRD = 'third',
+  QUARTER = 'quarter',
+  HALF = 'half',
+  TWO_THIRDS = 'two-thirds',
+  THREE_QUARTERS = 'three-quarters',
+  FULL = 'full',
+}
+
 export type FieldDeclaration = {
   readonly name: string;
+  readonly width: Width;
   readonly required: boolean;
   readonly label: string;
   readonly helperText?: string;
@@ -23,6 +33,7 @@ export type FieldDeclaration = {
 
 export type BlockDeclaration = {
   readonly direction: Direction;
+  readonly width: Width;
   readonly label?: string;
   readonly blocks: (FieldDeclaration | BlockDeclaration)[];
 };

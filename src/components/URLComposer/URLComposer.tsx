@@ -6,6 +6,7 @@ import Form, {
   FormProps,
   Direction,
   Errors,
+  Width,
   Values,
 } from '../Form';
 
@@ -39,6 +40,7 @@ https://url.spec.whatwg.org/#urls
 const connectionFields: FieldDeclaration[] = [
   {
     name: 'scheme',
+    width: Width.QUARTER,
     required: true,
     label: 'Scheme (Protocol)',
     suffix: '://',
@@ -51,12 +53,14 @@ const connectionFields: FieldDeclaration[] = [
   },
   {
     name: 'host',
+    width: Width.HALF,
     required: true,
     label: 'Host',
     validate: _value => null,
   },
   {
     name: 'port',
+    width: Width.QUARTER,
     required: false,
     label: 'Port',
     validate: _value => null,
@@ -66,18 +70,21 @@ const connectionFields: FieldDeclaration[] = [
 const resourceFields: FieldDeclaration[] = [
   {
     name: 'path',
+    width: Width.THIRD,
     required: true,
     label: 'Path',
     validate: _value => null,
   },
   {
     name: 'queryParams',
+    width: Width.THIRD,
     required: false,
     label: 'Query Parameters',
     validate: _value => null,
   },
   {
     name: 'fragment',
+    width: Width.THIRD,
     required: false,
     label: 'Fragment (Hash)',
     validate: _value => null,
@@ -87,12 +94,14 @@ const resourceFields: FieldDeclaration[] = [
 const credentialsFields: FieldDeclaration[] = [
   {
     name: 'username',
+    width: Width.FULL,
     required: false,
     label: 'Username',
     validate: _value => null,
   },
   {
     name: 'password',
+    width: Width.FULL,
     required: false,
     label: 'Password',
     validate: _value => null,
@@ -101,36 +110,30 @@ const credentialsFields: FieldDeclaration[] = [
 
 const block: BlockDeclaration = {
   direction: Direction.HORIZONTAL,
+  width: Width.FULL,
   blocks: [
     {
       direction: Direction.VERTICAL,
+      width: Width.TWO_THIRDS,
       blocks: [
         {
           label: 'Connection',
           direction: Direction.HORIZONTAL,
+          width: Width.FULL,
           blocks: connectionFields,
         },
         {
           label: 'Resource',
-          direction: Direction.VERTICAL,
-          blocks: resourceFields,
-        },
-        {
-          label: 'Blah',
           direction: Direction.HORIZONTAL,
-          blocks: [
-            {
-              label: 'Foo',
-              direction: Direction.HORIZONTAL,
-              blocks: connectionFields,
-            },
-          ],
+          width: Width.FULL,
+          blocks: resourceFields,
         },
       ],
     },
     {
-      label: 'Credentials',
       direction: Direction.VERTICAL,
+      width: Width.THIRD,
+      label: 'Credentials',
       blocks: credentialsFields,
     },
   ],
