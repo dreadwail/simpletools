@@ -1,14 +1,20 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
+import Flex from '../Flex';
+
 import FieldBlock from './FieldBlock';
-import type {
-  Error,
+import {
+  getCssWidth,
+  getCssJustification,
+  FieldType,
+  MaybeError,
   Errors,
   BlockDeclaration,
   FieldDeclaration,
   OnBlurHandler,
   OnChangeHandler,
-  Value,
+  Width,
+  Touched,
   Values,
 } from './types';
 
@@ -30,8 +36,6 @@ const isBlockDeclaration = (
   block: FieldDeclaration | BlockDeclaration
 ): block is BlockDeclaration => Array.isArray((block as BlockDeclaration).blocks);
 
-const normalizeValue = (value: Value): string => value ?? '';
-
 const extractFields = (block: BlockDeclaration): Record<FieldName, FieldDeclaration> =>
   block.blocks.reduce((memo, currentBlock) => {
     if (isBlockDeclaration(currentBlock)) {
@@ -40,18 +44,24 @@ const extractFields = (block: BlockDeclaration): Record<FieldName, FieldDeclarat
     return { ...memo, [currentBlock.name]: currentBlock };
   }, {});
 
-const computeError = (field: FieldDeclaration, value: Value): Error => {
-  const normalizedValue = normalizeValue(value);
+type ComputeErrorOptions = {
+  readonly field: FieldDeclaration;
+  readonly values: Values;
+  readonly touched: Touched;
+};
 
-  if (field.required && normalizedValue === '') {
-    return 'Required';
-  }
-
-  if (normalizedValue === '') {
+const computeError = ({ field, values, touched }: ComputeErrorOptions): MaybeError => {
+  if (!touched[field.name]) {
     return null;
   }
 
-  const error = field.validate?.(normalizedValue);
+  const value = values[field.name] ?? '';
+
+  if (field.required && !value) {
+    return 'Required';
+  }
+
+  const error = field.validate?.({ value, values });
   if (error) {
     return error;
   }
@@ -63,39 +73,77 @@ const Form: FC<FormProps> = ({ fields: block, onChange }) => {
   const [values, setValues] = useState<Values>({});
   const [errors, setErrors] = useState<Errors>({});
 
+  const fieldsByName = useMemo(() => extractFields(block), [block]);
+
+  const initialTouched = useMemo(
+    () =>
+      Object.keys(fieldsByName).reduce<Touched>((memo, name) => ({ ...memo, [name]: false }), {}),
+    [fieldsByName]
+  );
+
+  const [touched, setTouched] = useState<Touched>(initialTouched);
+
   useEffect(() => {
     onChange({ values, errors });
   }, [onChange, values, errors]);
 
-  const fieldsByName = useMemo(() => extractFields(block), [block]);
-
-  const onChangeField = useCallback<OnChangeHandler>((name, value) => {
-    const normalizedValue = normalizeValue(value);
-    setValues(oldValues => ({ ...oldValues, [name]: normalizedValue }));
-  }, []);
+  const onChangeField = useCallback<OnChangeHandler>(
+    (name, value) => {
+      const field = fieldsByName[name];
+      if (
+        field.type === FieldType.TEXT &&
+        field.transform &&
+        value !== null &&
+        value !== undefined
+      ) {
+        const transformed = field.transform(value);
+        setValues(oldValues => ({ ...oldValues, [name]: transformed }));
+      } else {
+        setValues(oldValues => ({ ...oldValues, [name]: value }));
+      }
+    },
+    [fieldsByName]
+  );
 
   const onBlurField = useCallback<OnBlurHandler>(
     name => {
+      setTouched(oldTouched => ({ ...oldTouched, [name]: true }));
       const field = fieldsByName[name];
-      if (!field) {
-        return;
+      if (field.onTouch) {
+        const { values: newValues = {}, errors: newErrors = {} } =
+          field.onTouch({ values, errors }) ?? {};
+        setValues(oldValues => ({ ...oldValues, ...newValues }));
+        setErrors(oldErrors => ({ ...oldErrors, ...newErrors }));
       }
-
-      const value = values[field.name];
-      const error = computeError(field, value);
-      setErrors(oldErrors => ({ ...oldErrors, [name]: error }));
     },
-    [fieldsByName, values]
+    [errors, fieldsByName, values]
   );
 
+  useEffect(() => {
+    const newErrors = Object.keys(fieldsByName).reduce<Errors>((memo, fieldName) => {
+      const field = fieldsByName[fieldName];
+      if (!field) {
+        return memo;
+      }
+      const error = computeError({ field, values, touched });
+      return { ...memo, [fieldName]: error };
+    }, {});
+    setErrors(oldErrors => ({ ...oldErrors, ...newErrors }));
+  }, [fieldsByName, values, touched]);
+
   return (
-    <FieldBlock
-      block={block}
-      values={values}
-      errors={errors}
-      onChangeField={onChangeField}
-      onBlurField={onBlurField}
-    />
+    <>
+      <Flex width={getCssWidth(Width.FULL)} justifyContent={getCssJustification(block.alignment)}>
+        <FieldBlock
+          block={block}
+          values={values}
+          errors={errors}
+          onChangeField={onChangeField}
+          onBlurField={onBlurField}
+        />
+      </Flex>
+      <pre>{JSON.stringify({ values, errors, touched }, null, 2)}</pre>
+    </>
   );
 };
 

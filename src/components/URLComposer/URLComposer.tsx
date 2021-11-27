@@ -2,7 +2,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import Form, {
   BlockDeclaration,
-  FieldDeclaration,
+  FieldType,
   FormProps,
   Direction,
   Errors,
@@ -11,130 +11,155 @@ import Form, {
 } from '../Form';
 
 /*
-form inputs (common)
-scheme/protocol
-host / domain
-path
-query params
-hash / fragment
-
-form inputs (advanced)
-username / password
-port
-
-button to create
-
 generated url
 copy button for generated url
-
-generated curl
-copy button for generated curl
 
 additional resources section
 https://developer.mozilla.org/en-US/docs/Web/API/URL
 https://en.wikipedia.org/wiki/URL
 https://url.spec.whatwg.org/#urls
-
 */
 
-const connectionFields: FieldDeclaration[] = [
-  {
-    name: 'scheme',
-    width: Width.QUARTER,
-    required: true,
-    label: 'Scheme (Protocol)',
-    suffix: '://',
-    validate: value => {
-      if (/^(https?|http|ftp|mailto)$/.test(value)) {
-        return null;
-      }
-      return 'Invalid scheme/protocol.';
-    },
-  },
-  {
-    name: 'host',
-    width: Width.HALF,
-    required: true,
-    label: 'Host',
-    validate: _value => null,
-  },
-  {
-    name: 'port',
-    width: Width.QUARTER,
-    required: false,
-    label: 'Port',
-    validate: _value => null,
-  },
+/*
+WIP:
+
+changing select from same value to same value does not trigger touched/validation
+dependent updates not working yet
+*/
+
+const validSchemes: string[] = [
+  'https://',
+  'http://',
+  'file://',
+  'git://',
+  'mailto:',
+  'ftp://',
+  'ldap://',
+  'ldaps://',
+  'blob:',
+  'cvs://',
 ];
 
-const resourceFields: FieldDeclaration[] = [
-  {
-    name: 'path',
-    width: Width.THIRD,
-    required: true,
-    label: 'Path',
-    validate: _value => null,
-  },
-  {
-    name: 'queryParams',
-    width: Width.THIRD,
-    required: false,
-    label: 'Query Parameters',
-    validate: _value => null,
-  },
-  {
-    name: 'fragment',
-    width: Width.THIRD,
-    required: false,
-    label: 'Fragment (Hash)',
-    validate: _value => null,
-  },
-];
-
-const credentialsFields: FieldDeclaration[] = [
-  {
-    name: 'username',
-    width: Width.FULL,
-    required: false,
-    label: 'Username',
-    validate: _value => null,
-  },
-  {
-    name: 'password',
-    width: Width.FULL,
-    required: false,
-    label: 'Password',
-    validate: _value => null,
-  },
-];
-
-const block: BlockDeclaration = {
-  direction: Direction.HORIZONTAL,
-  width: Width.FULL,
+const fields: BlockDeclaration = {
   blocks: [
     {
-      direction: Direction.VERTICAL,
-      width: Width.TWO_THIRDS,
+      direction: Direction.HORIZONTAL,
       blocks: [
         {
           label: 'Connection',
           direction: Direction.HORIZONTAL,
-          width: Width.FULL,
-          blocks: connectionFields,
+          width: Width.HALF,
+          blocks: [
+            {
+              type: FieldType.SELECT,
+              name: 'scheme',
+              width: Width.QUARTER,
+              required: true,
+              label: 'Scheme',
+              options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
+              initialValue: 'https://',
+              validate: ({ value }) => {
+                if (value && !validSchemes.includes(value)) {
+                  return 'Invalid scheme.';
+                }
+                return null;
+              },
+              onTouch: ({ values }) => {
+                const scheme = values.scheme;
+                const username = values.username;
+                if (scheme === 'mailto:' && !username) {
+                  return {
+                    errors: {
+                      username: 'Required when scheme is "mailto:"',
+                    },
+                  };
+                }
+              },
+            },
+            {
+              type: FieldType.TEXT,
+              name: 'host',
+              width: Width.HALF,
+              required: true,
+              label: 'Host',
+              validate: _value => null,
+            },
+            {
+              type: FieldType.TEXT,
+              name: 'port',
+              width: Width.QUARTER,
+              required: false,
+              label: 'Port',
+              initialValue: '80',
+              validate: _value => null,
+            },
+          ],
         },
         {
           label: 'Resource',
           direction: Direction.HORIZONTAL,
-          width: Width.FULL,
-          blocks: resourceFields,
+          width: Width.HALF,
+          blocks: [
+            {
+              type: FieldType.TEXT,
+              name: 'path',
+              width: Width.HALF,
+              required: true,
+              label: 'Path',
+              validate: _value => null,
+            },
+            {
+              type: FieldType.TEXT,
+              name: 'fragment',
+              width: Width.HALF,
+              required: false,
+              label: 'Fragment (Hash)',
+              validate: _value => null,
+            },
+          ],
         },
       ],
     },
     {
-      direction: Direction.VERTICAL,
-      width: Width.THIRD,
-      label: 'Credentials',
-      blocks: credentialsFields,
+      direction: Direction.HORIZONTAL,
+      blocks: [
+        {
+          width: Width.TWO_THIRDS,
+          label: 'Query Params',
+          blocks: [
+            {
+              type: FieldType.TEXT,
+              name: 'queryParams',
+              width: Width.FULL,
+              required: false,
+              label: 'Query Parameters',
+              validate: _value => null,
+            },
+          ],
+        },
+        {
+          direction: Direction.HORIZONTAL,
+          width: Width.THIRD,
+          label: 'Credentials (Optional)',
+          blocks: [
+            {
+              type: FieldType.TEXT,
+              name: 'username',
+              width: Width.HALF,
+              required: false,
+              label: 'Username',
+            },
+            {
+              type: FieldType.TEXT,
+              name: 'password',
+              width: Width.HALF,
+              required: false,
+              label: 'Password',
+              validate: _value => null,
+            },
+          ],
+        },
+      ],
     },
   ],
 };
@@ -161,8 +186,8 @@ const URLComposer: FC = () => {
 
   return (
     <div>
-      <Form fields={block} onChange={onChange} />
-      <pre>{JSON.stringify({ values, errors, url }, null, 2)}</pre>
+      <Form fields={fields} onChange={onChange} />
+      <pre>{JSON.stringify({ url }, null, 2)}</pre>
     </div>
   );
 };

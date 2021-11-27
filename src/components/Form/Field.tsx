@@ -1,38 +1,35 @@
-import InputAdornment from '@material-ui/core/InputAdornment';
-import TextField from '@material-ui/core/TextField';
 import { FC, useCallback, useMemo } from 'react';
 
-import type { Error, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
+import SelectField from './SelectField';
+import TextField from './TextField';
+import {
+  FieldType,
+  MaybeError,
+  FieldDeclaration,
+  OnBlurHandler,
+  OnChangeHandler,
+  MaybeValue,
+} from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
 
 export type FieldProps = FieldDeclaration & {
-  readonly error: Error;
-  readonly value: Value;
+  readonly error: MaybeError;
+  readonly value: MaybeValue;
   readonly onChange: OnChangeHandler;
   readonly onBlur: OnBlurHandler;
 };
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
-const Field: FC<FieldProps> = ({
-  name,
-  required,
-  label,
-  helperText,
-  prefix,
-  suffix,
-  value,
-  error,
-  onChange,
-  onBlur,
-}) => {
+const Field: FC<FieldProps> = ({ value, error, onChange, onBlur, ...field }) => {
+  const { name, helperText, required } = field;
+
   const onChangeHandler = useCallback(
     (event?: TextFieldChangeEvent) => {
       // The event can be absent. See: https://v4.mui.com/api/input-base/#props
       if (event) {
-        const newValue = event.target.value;
-        onChange(name, newValue);
+        onChange(name, event.target.value);
       }
     },
     [onChange, name]
@@ -40,9 +37,8 @@ const Field: FC<FieldProps> = ({
 
   const onBlurHandler = useCallback(
     (event?: TextFieldChangeEvent) => {
-      // The event can be absent. See: https://v4.mui.com/api/input-base/#props
       if (event) {
-        onBlur(name);
+        onBlur(name, event.target.value);
       }
     },
     [onBlur, name]
@@ -64,25 +60,24 @@ const Field: FC<FieldProps> = ({
     return DEFAULT_HELPER_TEXT;
   }, [error, helperText, value, required]);
 
-  return (
-    <TextField
-      fullWidth
-      size="small"
-      margin="none"
-      variant="outlined"
-      label={label}
-      InputProps={{
-        startAdornment: prefix ? <InputAdornment position="start">{prefix}</InputAdornment> : null,
-        endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
-      }}
-      value={value}
-      error={!!error}
-      helperText={adjustedHelperText}
-      required={required}
-      onChange={onChangeHandler}
-      onBlur={onBlurHandler}
-    />
+  const runtimeProps = useMemo(
+    () => ({
+      helperText: adjustedHelperText,
+      value,
+      error,
+      onChange: onChangeHandler,
+      onBlur: onBlurHandler,
+    }),
+    [adjustedHelperText, error, onBlurHandler, onChangeHandler, value]
   );
+
+  switch (field.type) {
+    case FieldType.SELECT:
+      return <SelectField {...field} {...runtimeProps} />;
+    case FieldType.TEXT:
+    default:
+      return <TextField {...field} {...runtimeProps} />;
+  }
 };
 
 export default Field;
