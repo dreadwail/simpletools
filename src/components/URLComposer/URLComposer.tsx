@@ -23,9 +23,7 @@ https://url.spec.whatwg.org/#urls
 /*
 WIP:
 
-changing select from same value to same value does not trigger touched/validation
-debounce onChange
-type safety on values everywhere based on supplied fields (if even possible?)
+form control for accumulating many values (query params)
 */
 
 const validSchemes: string[] = [
@@ -41,7 +39,17 @@ const validSchemes: string[] = [
   'cvs://',
 ];
 
-const fields: BlockDeclaration = {
+type URLFieldName =
+  | 'scheme'
+  | 'host'
+  | 'port'
+  | 'path'
+  | 'fragment'
+  | 'queryParams'
+  | 'username'
+  | 'password';
+
+const fields: BlockDeclaration<URLFieldName> = {
   blocks: [
     {
       direction: Direction.HORIZONTAL,
@@ -149,10 +157,10 @@ const fields: BlockDeclaration = {
 };
 
 const URLComposer: FC = () => {
-  const [values, setValues] = useState<Values>({});
-  const [errors, setErrors] = useState<Errors>({});
+  const [values, setValues] = useState<Values<URLFieldName>>({});
+  const [errors, setErrors] = useState<Errors<URLFieldName>>({});
 
-  const onChange = useCallback<FormProps['onChange']>(payload => {
+  const onChange = useCallback<FormProps<URLFieldName>['onChange']>(payload => {
     setValues(payload.values);
     setErrors(payload.errors);
   }, []);

@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Flex from '../Flex';
 
@@ -19,23 +19,28 @@ import {
 
 type FieldName = string;
 
-type OnChangePayload = {
-  readonly values: Values;
-  readonly errors: Errors;
+type OnChangePayload<TFieldName extends string> = {
+  readonly values: Values<TFieldName>;
+  readonly errors: Errors<TFieldName>;
 };
 
-export type OnFormChange = (payload: OnChangePayload) => void;
+export type OnFormChange<TFieldName extends string> = (
+  payload: OnChangePayload<TFieldName>
+) => void;
 
-export type FormProps = {
-  readonly fields: BlockDeclaration;
-  readonly onChange: OnFormChange;
+export type FormProps<TFieldName extends string> = {
+  readonly fields: BlockDeclaration<TFieldName>;
+  readonly onChange: OnFormChange<TFieldName>;
 };
 
-const isBlockDeclaration = (
-  block: FieldDeclaration | BlockDeclaration
-): block is BlockDeclaration => Array.isArray((block as BlockDeclaration).blocks);
+const isBlockDeclaration = <TFieldName extends string>(
+  block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
+): block is BlockDeclaration<TFieldName> =>
+  Array.isArray((block as BlockDeclaration<TFieldName>).blocks);
 
-const extractFields = (block: BlockDeclaration): Record<FieldName, FieldDeclaration> =>
+const extractFields = <TFieldName extends string>(
+  block: BlockDeclaration<TFieldName>
+): Record<FieldName, FieldDeclaration<TFieldName>> =>
   block.blocks.reduce((memo, currentBlock) => {
     if (isBlockDeclaration(currentBlock)) {
       return { ...memo, ...extractFields(currentBlock) };
@@ -43,51 +48,26 @@ const extractFields = (block: BlockDeclaration): Record<FieldName, FieldDeclarat
     return { ...memo, [currentBlock.name]: currentBlock };
   }, {});
 
-// type ComputeErrorOptions = {
-//   readonly field: FieldDeclaration;
-//   readonly values: Values;
-//   readonly touched: Touched;
-// };
-//
-// const computeError = ({ field, values, touched }: ComputeErrorOptions): MaybeError => {
-//   if (!touched[field.name]) {
-//     return null;
-//   }
-//
-//   const value = values[field.name] ?? '';
-//
-//   if (field.required && !value) {
-//     return 'Required';
-//   }
-//
-//   const error = field.validate?.({ value, values });
-//   if (error) {
-//     return error;
-//   }
-//
-//   return null;
-// };
-
-const Form: FC<FormProps> = ({ fields: block, onChange }) => {
+const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<TFieldName>) => {
   const fieldsByName = useMemo(() => extractFields(block), [block]);
   const initialValues = useMemo(
     () =>
-      Object.keys(fieldsByName).reduce<Values>(
+      Object.keys(fieldsByName).reduce<Values<TFieldName>>(
         (memo, fieldName) => ({ ...memo, [fieldName]: fieldsByName[fieldName].initialValue }),
         {}
       ),
     [fieldsByName]
   );
 
-  const [values, setValues] = useState<Values>(initialValues);
-  const [errors, setErrors] = useState<Errors>({});
-  const [touched, setTouched] = useState<Touched>({});
+  const [values, setValues] = useState<Values<TFieldName>>(initialValues);
+  const [errors, setErrors] = useState<Errors<TFieldName>>({});
+  const [touched, setTouched] = useState<Touched<TFieldName>>({});
 
   useEffect(() => {
     onChange({ values, errors });
   }, [onChange, values, errors]);
 
-  const onChangeField = useCallback<OnChangeHandler>(
+  const onChangeField = useCallback<OnChangeHandler<TFieldName>>(
     (name, value) => {
       const field = fieldsByName[name];
       if (
@@ -105,12 +85,12 @@ const Form: FC<FormProps> = ({ fields: block, onChange }) => {
     [fieldsByName]
   );
 
-  const onBlurField = useCallback<OnBlurHandler>(name => {
+  const onBlurField = useCallback<OnBlurHandler<TFieldName>>(name => {
     setTouched(oldTouched => ({ ...oldTouched, [name]: true }));
   }, []);
 
   useEffect(() => {
-    const newErrors = Object.keys(fieldsByName).reduce<Errors>((memo, fieldName) => {
+    const newErrors = Object.keys(fieldsByName).reduce<Errors<TFieldName>>((memo, fieldName) => {
       const field = fieldsByName[fieldName];
       if (!field) {
         return memo;

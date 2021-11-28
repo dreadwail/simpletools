@@ -1,66 +1,44 @@
-import { FC, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import SelectField from './SelectField';
 import TextField from './TextField';
-import {
-  FieldType,
-  MaybeError,
-  FieldDeclaration,
-  OnBlurHandler,
-  OnChangeHandler,
-  MaybeValue,
-} from './types';
+import { FieldType, Error, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
 
-export type FieldProps = FieldDeclaration & {
+export type FieldProps<TFieldName extends string> = FieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
   readonly hasBeenTouched: boolean;
-  readonly error: MaybeError;
-  readonly value: MaybeValue;
-  readonly onChange: OnChangeHandler;
-  readonly onBlur: OnBlurHandler;
+  readonly error?: Error;
+  readonly value?: Value;
+  readonly onChangeField: OnChangeHandler<TFieldName>;
+  readonly onBlurField: OnBlurHandler<TFieldName>;
 };
-
-type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 type HelperText = {
   readonly text: string;
   readonly isError: boolean;
 };
 
-const Field: FC<FieldProps> = ({
+const Field = <TFieldName extends string>({
   hasBeenTouched,
   value,
   error,
-  onChange,
-  onBlur,
+  onChangeField,
+  onBlurField,
   isRequired,
   ...field
-}) => {
+}: FieldProps<TFieldName>) => {
   const onChangeHandler = useCallback(
-    (event?: TextFieldChangeEvent) => {
-      // eslint-disable-next-line no-console
-      console.log('onChangeHandler');
-      // The event can be absent. See: https://v4.mui.com/api/input-base/#props
-      if (event) {
-        onChange(field.name, event.target.value);
-      }
+    (newValue: Value) => {
+      onChangeField(field.name, newValue);
     },
-    [onChange, field.name]
+    [onChangeField, field.name]
   );
 
-  const onBlurHandler = useCallback(
-    (event?: TextFieldChangeEvent) => {
-      // eslint-disable-next-line no-console
-      console.log('onBlurHandler');
-      // The event can be absent. See: https://v4.mui.com/api/input-base/#props
-      if (event) {
-        onBlur(field.name, event.target.value);
-      }
-    },
-    [onBlur, field.name]
-  );
+  const onBlurHandler = useCallback(() => {
+    onBlurField(field.name);
+  }, [onBlurField, field.name]);
 
   const adjustedHelperText = useMemo((): HelperText => {
     if (error) {

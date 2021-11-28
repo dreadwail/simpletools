@@ -1,20 +1,23 @@
 import InputAdornment from '@material-ui/core/InputAdornment';
 import MaterialTextField from '@material-ui/core/TextField';
-import type { FC } from 'react';
+import debounce from 'lodash/debounce';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { TextFieldDeclaration, MaybeValue } from './types';
+import type { TextFieldDeclaration, Value } from './types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
-export type TextFieldProps = TextFieldDeclaration & {
+export type TextFieldProps<TFieldName extends string> = TextFieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
-  readonly value: MaybeValue;
+  readonly value?: Value;
   readonly hasError: boolean;
-  readonly onChange: (event: TextFieldChangeEvent) => void;
-  readonly onBlur: (event: TextFieldChangeEvent) => void;
+  readonly onChange: (value: Value) => void;
+  readonly onBlur: () => void;
 };
 
-const TextField: FC<TextFieldProps> = ({
+const DEBOUNCE_MILLIS = 200;
+
+const TextField = <TFieldName extends string>({
   name,
   isRequired,
   label,
@@ -26,25 +29,42 @@ const TextField: FC<TextFieldProps> = ({
   hasError,
   onChange,
   onBlur,
-}) => (
-  <MaterialTextField
-    name={name}
-    fullWidth
-    size="small"
-    margin="none"
-    variant="outlined"
-    label={label}
-    InputProps={{
-      startAdornment: prefix ? <InputAdornment position="start">{prefix}</InputAdornment> : null,
-      endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
-    }}
-    value={value ?? initialValue ?? ''}
-    error={hasError}
-    helperText={helperText}
-    required={isRequired}
-    onChange={onChange}
-    onBlur={onBlur}
-  />
-);
+}: TextFieldProps<TFieldName>) => {
+  const [localValue, setLocalValue] = useState(value ?? initialValue ?? '');
+
+  const onChangeLocal = useCallback((event: TextFieldChangeEvent) => {
+    // The event can be absent. See: https://v4.mui.com/api/input-base/#props
+    if (event) {
+      setLocalValue(event.target.value);
+    }
+  }, []);
+
+  const onChangeDebounced = useMemo(() => debounce(onChange, DEBOUNCE_MILLIS), [onChange]);
+
+  useEffect(() => {
+    onChangeDebounced(localValue);
+  }, [onChangeDebounced, localValue]);
+
+  return (
+    <MaterialTextField
+      name={name}
+      fullWidth
+      size="small"
+      margin="none"
+      variant="outlined"
+      label={label}
+      InputProps={{
+        startAdornment: prefix ? <InputAdornment position="start">{prefix}</InputAdornment> : null,
+        endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
+      }}
+      value={localValue}
+      error={hasError}
+      helperText={helperText}
+      required={isRequired}
+      onChange={onChangeLocal}
+      onBlur={onBlur}
+    />
+  );
+};
 
 export default TextField;

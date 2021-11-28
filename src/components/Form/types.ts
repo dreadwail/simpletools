@@ -1,11 +1,9 @@
-export type FieldName = string;
+export type Value = string;
+export type Error = string;
 
-export type MaybeValue = string | null | undefined;
-export type MaybeError = string | null | undefined;
-
-export type Values = Record<FieldName, MaybeValue>;
-export type Errors = Record<FieldName, MaybeError>;
-export type Touched = Record<FieldName, boolean>;
+export type Values<TFieldName extends string> = { [key in TFieldName]?: Value };
+export type Errors<TFieldName extends string> = { [key in TFieldName]?: Error };
+export type Touched<TFieldName extends string> = { [key in TFieldName]?: boolean };
 
 export enum Direction {
   HORIZONTAL = 'horizontal',
@@ -60,20 +58,20 @@ export enum FieldType {
   SELECT,
 }
 
-type FieldDeclarationBase = {
+type FieldDeclarationBase<TFieldName extends string> = {
   readonly type: FieldType;
-  readonly name: string;
+  readonly name: TFieldName;
   readonly width?: Width;
-  readonly isRequired?: boolean | ((values: Values) => boolean);
+  readonly isRequired?: boolean | ((values: Values<TFieldName>) => boolean);
   readonly label: string;
   readonly helperText?: string;
   readonly prefix?: string;
   readonly suffix?: string;
-  readonly initialValue?: MaybeValue;
-  readonly validate?: (values: Values) => MaybeError;
+  readonly initialValue?: Value;
+  readonly validate?: (values: Values<TFieldName>) => Error | null | undefined | void;
 };
 
-export type TextFieldDeclaration = FieldDeclarationBase & {
+export type TextFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<TFieldName> & {
   readonly type: FieldType.TEXT;
   readonly transform?: (value: string) => string;
 };
@@ -83,20 +81,27 @@ export type SelectOption = {
   readonly value: string;
 };
 
-export type SelectFieldDeclaration = FieldDeclarationBase & {
+export type SelectFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<TFieldName> & {
   readonly type: FieldType.SELECT;
   readonly options: SelectOption[];
 };
 
-export type FieldDeclaration = TextFieldDeclaration | SelectFieldDeclaration;
+export type FieldDeclaration<TFieldName extends string> =
+  | TextFieldDeclaration<TFieldName>
+  | SelectFieldDeclaration<TFieldName>;
 
-export type BlockDeclaration = {
+export type BlockDeclaration<TFieldName extends string> = {
   readonly direction?: Direction;
   readonly alignment?: Alignment;
   readonly width?: Width;
   readonly label?: string;
-  readonly blocks: (FieldDeclaration | BlockDeclaration)[];
+  readonly blocks: (FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>)[];
 };
 
-export type OnChangeHandler = (name: FieldDeclaration['name'], value: MaybeValue) => void;
-export type OnBlurHandler = (name: FieldDeclaration['name'], value: MaybeValue) => void;
+export type OnChangeHandler<TFieldName extends string> = (
+  name: FieldDeclaration<TFieldName>['name'],
+  value: Value
+) => void;
+export type OnBlurHandler<TFieldName extends string> = (
+  name: FieldDeclaration<TFieldName>['name']
+) => void;

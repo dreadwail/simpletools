@@ -1,5 +1,4 @@
 import Box from '@material-ui/core/Box';
-import type { FC } from 'react';
 
 import Flex from '../Flex';
 
@@ -9,40 +8,39 @@ import {
   getCssDirection,
   getCssJustification,
   getCssWidth,
-  MaybeError,
+  Errors,
   FieldDeclaration,
   BlockDeclaration,
   OnBlurHandler,
   OnChangeHandler,
+  Touched,
   Width,
-  MaybeValue,
+  Values,
 } from './types';
 
-type FieldName = string;
-
-type FieldBlockProps = {
-  readonly block: BlockDeclaration | FieldDeclaration;
-  readonly values: Record<FieldName, MaybeValue>;
-  readonly errors: Record<FieldName, MaybeError>;
-  readonly touched: Record<FieldName, boolean>;
-  readonly onChangeField: OnChangeHandler;
-  readonly onBlurField: OnBlurHandler;
+type FieldBlockProps<TFieldName extends string> = {
+  readonly block: BlockDeclaration<TFieldName> | FieldDeclaration<TFieldName>;
+  readonly values: Values<TFieldName>;
+  readonly errors: Errors<TFieldName>;
+  readonly touched: Touched<TFieldName>;
+  readonly onChangeField: OnChangeHandler<TFieldName>;
+  readonly onBlurField: OnBlurHandler<TFieldName>;
 };
 
-const isFieldDeclaration = (
-  block: FieldDeclaration | BlockDeclaration
-): block is FieldDeclaration => !!(block as FieldDeclaration).name;
+const isFieldDeclaration = <TFieldName extends string>(
+  block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
+): block is FieldDeclaration<TFieldName> => !!(block as FieldDeclaration<TFieldName>).name;
 
 const GAP = 0.5;
 
-const FieldBlock: FC<FieldBlockProps> = ({
+const FieldBlock = <TFieldName extends string>({
   block,
   values,
   errors,
   touched,
   onChangeField,
   onBlurField,
-}) => {
+}: FieldBlockProps<TFieldName>) => {
   if (isFieldDeclaration(block)) {
     const isRequired =
       typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
@@ -52,11 +50,11 @@ const FieldBlock: FC<FieldBlockProps> = ({
         <Field
           {...block}
           isRequired={isRequired}
-          hasBeenTouched={touched[block.name]}
+          hasBeenTouched={!!touched[block.name]}
           error={errors[block.name]}
           value={values[block.name]}
-          onChange={onChangeField}
-          onBlur={onBlurField}
+          onChangeField={onChangeField}
+          onBlurField={onBlurField}
         />
       </Flex>
     );
