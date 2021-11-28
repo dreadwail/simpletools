@@ -60,33 +60,17 @@ export enum FieldType {
   SELECT,
 }
 
-type RelatedFieldOptions = {
-  readonly values: Values;
-  readonly errors: Errors;
-};
-
-type RelatedFieldUpdates = {
-  readonly values?: Partial<Values>;
-  readonly errors?: Partial<Errors>;
-};
-
-type ValidateOptions = {
-  readonly value: string;
-  readonly values: Values;
-};
-
 type FieldDeclarationBase = {
   readonly type: FieldType;
   readonly name: string;
   readonly width?: Width;
-  readonly required: boolean;
+  readonly isRequired?: boolean | ((values: Values) => boolean);
   readonly label: string;
   readonly helperText?: string;
   readonly prefix?: string;
   readonly suffix?: string;
   readonly initialValue?: MaybeValue;
-  readonly validate?: (options: ValidateOptions) => MaybeError;
-  readonly onTouch?: (options: RelatedFieldOptions) => RelatedFieldUpdates | void;
+  readonly validate?: (values: Values) => MaybeError;
 };
 
 export type TextFieldDeclaration = FieldDeclarationBase & {

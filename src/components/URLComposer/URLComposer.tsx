@@ -24,7 +24,8 @@ https://url.spec.whatwg.org/#urls
 WIP:
 
 changing select from same value to same value does not trigger touched/validation
-dependent updates not working yet
+debounce onChange
+type safety on values everywhere based on supplied fields (if even possible?)
 */
 
 const validSchemes: string[] = [
@@ -54,25 +55,14 @@ const fields: BlockDeclaration = {
               type: FieldType.SELECT,
               name: 'scheme',
               width: Width.QUARTER,
-              required: true,
+              isRequired: true,
               label: 'Scheme',
               options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
               initialValue: 'https://',
-              validate: ({ value }) => {
+              validate: values => {
+                const value = values.scheme;
                 if (value && !validSchemes.includes(value)) {
-                  return 'Invalid scheme.';
-                }
-                return null;
-              },
-              onTouch: ({ values }) => {
-                const scheme = values.scheme;
-                const username = values.username;
-                if (scheme === 'mailto:' && !username) {
-                  return {
-                    errors: {
-                      username: 'Required when scheme is "mailto:"',
-                    },
-                  };
+                  return 'Invalid scheme';
                 }
               },
             },
@@ -80,18 +70,16 @@ const fields: BlockDeclaration = {
               type: FieldType.TEXT,
               name: 'host',
               width: Width.HALF,
-              required: true,
+              isRequired: true,
               label: 'Host',
-              validate: _value => null,
             },
             {
               type: FieldType.TEXT,
               name: 'port',
               width: Width.QUARTER,
-              required: false,
+              isRequired: false,
               label: 'Port',
               initialValue: '80',
-              validate: _value => null,
             },
           ],
         },
@@ -104,17 +92,15 @@ const fields: BlockDeclaration = {
               type: FieldType.TEXT,
               name: 'path',
               width: Width.HALF,
-              required: true,
+              isRequired: true,
               label: 'Path',
-              validate: _value => null,
             },
             {
               type: FieldType.TEXT,
               name: 'fragment',
               width: Width.HALF,
-              required: false,
+              isRequired: false,
               label: 'Fragment (Hash)',
-              validate: _value => null,
             },
           ],
         },
@@ -131,9 +117,8 @@ const fields: BlockDeclaration = {
               type: FieldType.TEXT,
               name: 'queryParams',
               width: Width.FULL,
-              required: false,
+              isRequired: false,
               label: 'Query Parameters',
-              validate: _value => null,
             },
           ],
         },
@@ -146,16 +131,15 @@ const fields: BlockDeclaration = {
               type: FieldType.TEXT,
               name: 'username',
               width: Width.HALF,
-              required: false,
+              isRequired: values => values.scheme === 'mailto:',
               label: 'Username',
             },
             {
               type: FieldType.TEXT,
               name: 'password',
               width: Width.HALF,
-              required: false,
+              isRequired: false,
               label: 'Password',
-              validate: _value => null,
             },
           ],
         },

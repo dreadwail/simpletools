@@ -14,6 +14,8 @@ import {
 const DEFAULT_HELPER_TEXT = ' ';
 
 export type FieldProps = FieldDeclaration & {
+  readonly isRequired: boolean;
+  readonly hasBeenTouched: boolean;
   readonly error: MaybeError;
   readonly value: MaybeValue;
   readonly onChange: OnChangeHandler;
@@ -22,61 +24,81 @@ export type FieldProps = FieldDeclaration & {
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
-const Field: FC<FieldProps> = ({ value, error, onChange, onBlur, ...field }) => {
-  const { name, helperText, required } = field;
+type HelperText = {
+  readonly text: string;
+  readonly isError: boolean;
+};
 
+const Field: FC<FieldProps> = ({
+  hasBeenTouched,
+  value,
+  error,
+  onChange,
+  onBlur,
+  isRequired,
+  ...field
+}) => {
   const onChangeHandler = useCallback(
     (event?: TextFieldChangeEvent) => {
+      // eslint-disable-next-line no-console
+      console.log('onChangeHandler');
       // The event can be absent. See: https://v4.mui.com/api/input-base/#props
       if (event) {
-        onChange(name, event.target.value);
+        onChange(field.name, event.target.value);
       }
     },
-    [onChange, name]
+    [onChange, field.name]
   );
 
   const onBlurHandler = useCallback(
     (event?: TextFieldChangeEvent) => {
+      // eslint-disable-next-line no-console
+      console.log('onBlurHandler');
+      // The event can be absent. See: https://v4.mui.com/api/input-base/#props
       if (event) {
-        onBlur(name, event.target.value);
+        onBlur(field.name, event.target.value);
       }
     },
-    [onBlur, name]
+    [onBlur, field.name]
   );
 
-  const adjustedHelperText = useMemo((): string => {
+  const adjustedHelperText = useMemo((): HelperText => {
     if (error) {
-      return error;
+      return { text: error, isError: true };
     }
-    if (helperText) {
-      return helperText;
+    if (isRequired && !value) {
+      return { text: 'Required', isError: hasBeenTouched };
     }
-    if (!value) {
-      if (required) {
-        return 'Required';
-      }
-      return 'Optional';
-    }
-    return DEFAULT_HELPER_TEXT;
-  }, [error, helperText, value, required]);
-
-  const runtimeProps = useMemo(
-    () => ({
-      helperText: adjustedHelperText,
-      value,
-      error,
-      onChange: onChangeHandler,
-      onBlur: onBlurHandler,
-    }),
-    [adjustedHelperText, error, onBlurHandler, onChangeHandler, value]
-  );
+    return { text: field.helperText ?? DEFAULT_HELPER_TEXT, isError: false };
+  }, [error, isRequired, value, field.helperText, hasBeenTouched]);
 
   switch (field.type) {
     case FieldType.SELECT:
-      return <SelectField {...field} {...runtimeProps} />;
+      return (
+        <SelectField
+          {...field}
+          value={value}
+          options={field.options}
+          isRequired={isRequired}
+          helperText={adjustedHelperText.text}
+          hasError={adjustedHelperText.isError}
+          onChange={onChangeHandler}
+          onBlur={onBlurHandler}
+        />
+      );
     case FieldType.TEXT:
     default:
-      return <TextField {...field} {...runtimeProps} />;
+      return (
+        <TextField
+          {...field}
+          value={value}
+          isRequired={isRequired}
+          helperText={adjustedHelperText.text}
+          hasError={adjustedHelperText.isError}
+          onChange={onChangeHandler}
+          onBlur={onBlurHandler}
+        />
+      );
   }
 };
 

@@ -3,20 +3,21 @@ import MenuItem from '@material-ui/core/MenuItem';
 import MaterialTextField from '@material-ui/core/TextField';
 import type { FC } from 'react';
 
-import type { MaybeError, SelectFieldDeclaration, MaybeValue } from './types';
+import type { SelectFieldDeclaration, MaybeValue } from './types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 export type SelectFieldProps = SelectFieldDeclaration & {
-  readonly error: MaybeError;
+  readonly isRequired: boolean;
   readonly value: MaybeValue;
+  readonly hasError: boolean;
   readonly onChange: (event: TextFieldChangeEvent) => void;
   readonly onBlur: (event: TextFieldChangeEvent) => void;
 };
 
 const SelectField: FC<SelectFieldProps> = ({
   name,
-  required,
+  isRequired,
   label,
   helperText,
   prefix,
@@ -24,7 +25,7 @@ const SelectField: FC<SelectFieldProps> = ({
   initialValue,
   value,
   options,
-  error,
+  hasError,
   onChange,
   onBlur,
 }) => (
@@ -41,9 +42,9 @@ const SelectField: FC<SelectFieldProps> = ({
       endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
     }}
     value={value ?? initialValue ?? ''}
-    error={!!error}
+    error={hasError}
     helperText={helperText}
-    required={required}
+    required={isRequired}
     onChange={onChange}
     onBlur={onBlur}
   >

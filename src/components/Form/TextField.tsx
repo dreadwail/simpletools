@@ -2,27 +2,28 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import MaterialTextField from '@material-ui/core/TextField';
 import type { FC } from 'react';
 
-import type { MaybeError, TextFieldDeclaration, MaybeValue } from './types';
+import type { TextFieldDeclaration, MaybeValue } from './types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 export type TextFieldProps = TextFieldDeclaration & {
-  readonly error: MaybeError;
+  readonly isRequired: boolean;
   readonly value: MaybeValue;
+  readonly hasError: boolean;
   readonly onChange: (event: TextFieldChangeEvent) => void;
   readonly onBlur: (event: TextFieldChangeEvent) => void;
 };
 
 const TextField: FC<TextFieldProps> = ({
   name,
-  required,
+  isRequired,
   label,
   helperText,
   prefix,
   suffix,
   initialValue,
   value,
-  error,
+  hasError,
   onChange,
   onBlur,
 }) => (
@@ -38,9 +39,9 @@ const TextField: FC<TextFieldProps> = ({
       endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
     }}
     value={value ?? initialValue ?? ''}
-    error={!!error}
+    error={hasError}
     helperText={helperText}
-    required={required}
+    required={isRequired}
     onChange={onChange}
     onBlur={onBlur}
   />

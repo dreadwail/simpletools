@@ -7,7 +7,6 @@ import {
   getCssWidth,
   getCssJustification,
   FieldType,
-  MaybeError,
   Errors,
   BlockDeclaration,
   FieldDeclaration,
@@ -44,44 +43,45 @@ const extractFields = (block: BlockDeclaration): Record<FieldName, FieldDeclarat
     return { ...memo, [currentBlock.name]: currentBlock };
   }, {});
 
-type ComputeErrorOptions = {
-  readonly field: FieldDeclaration;
-  readonly values: Values;
-  readonly touched: Touched;
-};
-
-const computeError = ({ field, values, touched }: ComputeErrorOptions): MaybeError => {
-  if (!touched[field.name]) {
-    return null;
-  }
-
-  const value = values[field.name] ?? '';
-
-  if (field.required && !value) {
-    return 'Required';
-  }
-
-  const error = field.validate?.({ value, values });
-  if (error) {
-    return error;
-  }
-
-  return null;
-};
+// type ComputeErrorOptions = {
+//   readonly field: FieldDeclaration;
+//   readonly values: Values;
+//   readonly touched: Touched;
+// };
+//
+// const computeError = ({ field, values, touched }: ComputeErrorOptions): MaybeError => {
+//   if (!touched[field.name]) {
+//     return null;
+//   }
+//
+//   const value = values[field.name] ?? '';
+//
+//   if (field.required && !value) {
+//     return 'Required';
+//   }
+//
+//   const error = field.validate?.({ value, values });
+//   if (error) {
+//     return error;
+//   }
+//
+//   return null;
+// };
 
 const Form: FC<FormProps> = ({ fields: block, onChange }) => {
-  const [values, setValues] = useState<Values>({});
-  const [errors, setErrors] = useState<Errors>({});
-
   const fieldsByName = useMemo(() => extractFields(block), [block]);
-
-  const initialTouched = useMemo(
+  const initialValues = useMemo(
     () =>
-      Object.keys(fieldsByName).reduce<Touched>((memo, name) => ({ ...memo, [name]: false }), {}),
+      Object.keys(fieldsByName).reduce<Values>(
+        (memo, fieldName) => ({ ...memo, [fieldName]: fieldsByName[fieldName].initialValue }),
+        {}
+      ),
     [fieldsByName]
   );
 
-  const [touched, setTouched] = useState<Touched>(initialTouched);
+  const [values, setValues] = useState<Values>(initialValues);
+  const [errors, setErrors] = useState<Errors>({});
+  const [touched, setTouched] = useState<Touched>({});
 
   useEffect(() => {
     onChange({ values, errors });
@@ -105,19 +105,9 @@ const Form: FC<FormProps> = ({ fields: block, onChange }) => {
     [fieldsByName]
   );
 
-  const onBlurField = useCallback<OnBlurHandler>(
-    name => {
-      setTouched(oldTouched => ({ ...oldTouched, [name]: true }));
-      const field = fieldsByName[name];
-      if (field.onTouch) {
-        const { values: newValues = {}, errors: newErrors = {} } =
-          field.onTouch({ values, errors }) ?? {};
-        setValues(oldValues => ({ ...oldValues, ...newValues }));
-        setErrors(oldErrors => ({ ...oldErrors, ...newErrors }));
-      }
-    },
-    [errors, fieldsByName, values]
-  );
+  const onBlurField = useCallback<OnBlurHandler>(name => {
+    setTouched(oldTouched => ({ ...oldTouched, [name]: true }));
+  }, []);
 
   useEffect(() => {
     const newErrors = Object.keys(fieldsByName).reduce<Errors>((memo, fieldName) => {
@@ -125,8 +115,21 @@ const Form: FC<FormProps> = ({ fields: block, onChange }) => {
       if (!field) {
         return memo;
       }
-      const error = computeError({ field, values, touched });
-      return { ...memo, [fieldName]: error };
+
+      const hasBeenTouched = !!touched[field.name];
+      if (!hasBeenTouched) {
+        return memo;
+      }
+
+      const isRequired =
+        typeof field.isRequired === 'boolean' ? field.isRequired : !!field.isRequired?.(values);
+
+      if (isRequired && !values[field.name]) {
+        return { ...memo, [fieldName]: 'Required' };
+      }
+
+      const maybeError = field.validate?.(values);
+      return { ...memo, [fieldName]: maybeError };
     }, {});
     setErrors(oldErrors => ({ ...oldErrors, ...newErrors }));
   }, [fieldsByName, values, touched]);
@@ -138,6 +141,7 @@ const Form: FC<FormProps> = ({ fields: block, onChange }) => {
           block={block}
           values={values}
           errors={errors}
+          touched={touched}
           onChangeField={onChangeField}
           onBlurField={onBlurField}
         />

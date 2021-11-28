@@ -24,6 +24,7 @@ type FieldBlockProps = {
   readonly block: BlockDeclaration | FieldDeclaration;
   readonly values: Record<FieldName, MaybeValue>;
   readonly errors: Record<FieldName, MaybeError>;
+  readonly touched: Record<FieldName, boolean>;
   readonly onChangeField: OnChangeHandler;
   readonly onBlurField: OnBlurHandler;
 };
@@ -34,12 +35,24 @@ const isFieldDeclaration = (
 
 const GAP = 0.5;
 
-const FieldBlock: FC<FieldBlockProps> = ({ block, values, errors, onChangeField, onBlurField }) => {
+const FieldBlock: FC<FieldBlockProps> = ({
+  block,
+  values,
+  errors,
+  touched,
+  onChangeField,
+  onBlurField,
+}) => {
   if (isFieldDeclaration(block)) {
+    const isRequired =
+      typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
+
     return (
       <Flex p={GAP} width={getCssWidth(block.width)}>
         <Field
           {...block}
+          isRequired={isRequired}
+          hasBeenTouched={touched[block.name]}
           error={errors[block.name]}
           value={values[block.name]}
           onChange={onChangeField}
@@ -62,6 +75,7 @@ const FieldBlock: FC<FieldBlockProps> = ({ block, values, errors, onChangeField,
           block={subBlock}
           values={values}
           errors={errors}
+          touched={touched}
           onChangeField={onChangeField}
           onBlurField={onBlurField}
         />
