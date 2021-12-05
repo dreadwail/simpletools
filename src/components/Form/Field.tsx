@@ -1,7 +1,8 @@
 import { useCallback, useMemo } from 'react';
 
-import SelectField from './SelectField';
-import TextField from './TextField';
+import List from './fields/List';
+import Select from './fields/Select';
+import Text from './fields/Text';
 import { FieldType, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
@@ -30,8 +31,8 @@ const Field = <TFieldName extends string>({
   ...field
 }: FieldProps<TFieldName>) => {
   const onChangeHandler = useCallback(
-    (newValue: string) => {
-      onChangeField(field.name, newValue);
+    (...newValues: string[]) => {
+      onChangeField(field.name, ...newValues);
     },
     [onChangeField, field.name]
   );
@@ -50,7 +51,7 @@ const Field = <TFieldName extends string>({
   switch (field.type) {
     case FieldType.SELECT:
       return (
-        <SelectField
+        <Select
           {...field}
           value={value as string | undefined}
           options={field.options}
@@ -63,9 +64,21 @@ const Field = <TFieldName extends string>({
       );
     case FieldType.TEXT:
       return (
-        <TextField
+        <Text
           {...field}
           value={value as string | undefined}
+          isRequired={isRequired}
+          helperText={adjustedHelperText.text}
+          hasError={adjustedHelperText.isError}
+          onChange={onChangeHandler}
+          onBlur={onBlurHandler}
+        />
+      );
+    case FieldType.LIST:
+      return (
+        <List
+          {...field}
+          value={value as string[] | undefined}
           isRequired={isRequired}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}

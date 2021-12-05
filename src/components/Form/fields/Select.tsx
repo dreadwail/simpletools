@@ -2,11 +2,14 @@ import MenuItem from '@material-ui/core/MenuItem';
 import MaterialTextField from '@material-ui/core/TextField';
 import { useCallback } from 'react';
 
-import type { SelectFieldDeclaration } from './types';
+import type { SelectFieldDeclaration } from '../types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
-export type SelectFieldProps<TFieldName extends string> = SelectFieldDeclaration<TFieldName> & {
+export type SelectProps<TFieldName extends string> = Omit<
+  SelectFieldDeclaration<TFieldName>,
+  'type'
+> & {
   readonly isRequired: boolean;
   readonly value?: string;
   readonly hasError: boolean;
@@ -14,7 +17,7 @@ export type SelectFieldProps<TFieldName extends string> = SelectFieldDeclaration
   readonly onBlur: () => void;
 };
 
-const SelectField = <TFieldName extends string>({
+const Select = <TFieldName extends string>({
   name,
   isRequired,
   label,
@@ -25,7 +28,7 @@ const SelectField = <TFieldName extends string>({
   hasError,
   onChange,
   onBlur,
-}: SelectFieldProps<TFieldName>) => {
+}: SelectProps<TFieldName>) => {
   const onChangeHandler = useCallback(
     (event: TextFieldChangeEvent) => {
       // The event can be absent. See: https://v4.mui.com/api/input-base/#props
@@ -61,4 +64,4 @@ const SelectField = <TFieldName extends string>({
   );
 };
 
-export default SelectField;
+export default Select;

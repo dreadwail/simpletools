@@ -1,4 +1,5 @@
 import Box from '@material-ui/core/Box';
+import { FC, useMemo } from 'react';
 
 import Flex from '../Flex';
 
@@ -41,12 +42,23 @@ const FieldBlock = <TFieldName extends string>({
   onChangeField,
   onBlurField,
 }: FieldBlockProps<TFieldName>) => {
+  const Wrapper: FC = useMemo(
+    () =>
+      ({ children }) =>
+        (
+          <Flex alignItems="flex-start" width={getCssWidth(block.width)} p={GAP}>
+            {children}
+          </Flex>
+        ),
+    [block.width]
+  );
+
   if (isFieldDeclaration(block)) {
     const isRequired =
       typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
 
     return (
-      <Flex p={GAP} width={getCssWidth(block.width)}>
+      <Wrapper>
         <Field
           {...block}
           isRequired={isRequired}
@@ -56,7 +68,7 @@ const FieldBlock = <TFieldName extends string>({
           onChangeField={onChangeField}
           onBlurField={onBlurField}
         />
-      </Flex>
+      </Wrapper>
     );
   }
 
@@ -83,19 +95,15 @@ const FieldBlock = <TFieldName extends string>({
 
   if (block.label) {
     return (
-      <Flex width={getCssWidth(block.width)} p={GAP}>
+      <Wrapper>
         <Box width="100%">
           <FieldSet label={block.label}>{subBlocks}</FieldSet>
         </Box>
-      </Flex>
+      </Wrapper>
     );
   }
 
-  return (
-    <Flex width={getCssWidth(block.width)} p={GAP}>
-      {subBlocks}
-    </Flex>
-  );
+  return <Wrapper>{subBlocks}</Wrapper>;
 };
 
 export default FieldBlock;

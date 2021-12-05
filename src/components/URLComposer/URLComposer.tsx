@@ -2,6 +2,7 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import Form, {
   BlockDeclaration,
+  FieldDeclaration,
   FieldType,
   FormProps,
   Direction,
@@ -49,106 +50,113 @@ type URLFieldName =
   | 'username'
   | 'password';
 
+const schemeField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.SELECT,
+  name: 'scheme',
+  width: Width.QUARTER,
+  isRequired: true,
+  label: 'Scheme',
+  options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
+  initialValue: 'https://',
+  validate: value => {
+    if (value && !validSchemes.includes(value)) {
+      return 'Invalid scheme';
+    }
+  },
+};
+
+const hostField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.TEXT,
+  name: 'host',
+  width: Width.HALF,
+  isRequired: true,
+  label: 'Host',
+};
+
+const portField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.TEXT,
+  name: 'port',
+  width: Width.QUARTER,
+  isRequired: false,
+  label: 'Port',
+  initialValue: '80',
+};
+
+const pathField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.TEXT,
+  name: 'path',
+  width: Width.HALF,
+  isRequired: true,
+  label: 'Path',
+};
+
+const fragmentField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.TEXT,
+  name: 'fragment',
+  width: Width.HALF,
+  isRequired: false,
+  label: 'Fragment (Hash)',
+};
+
+const queryParamsField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.LIST,
+  name: 'queryParams',
+  width: Width.FULL,
+  isRequired: false,
+  label: 'Query Parameters',
+};
+
+const usernameField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.TEXT,
+  name: 'username',
+  width: Width.HALF,
+  isRequired: values => values.scheme === 'mailto:',
+  label: 'Username',
+};
+
+const passwordField: FieldDeclaration<URLFieldName> = {
+  type: FieldType.TEXT,
+  name: 'password',
+  width: Width.HALF,
+  isRequired: false,
+  label: 'Password',
+};
+
 const fields: BlockDeclaration<URLFieldName> = {
+  direction: Direction.HORIZONTAL,
   blocks: [
     {
-      direction: Direction.HORIZONTAL,
+      direction: Direction.VERTICAL,
+      width: Width.HALF,
       blocks: [
         {
           label: 'Connection',
           direction: Direction.HORIZONTAL,
-          width: Width.HALF,
-          blocks: [
-            {
-              type: FieldType.SELECT,
-              name: 'scheme',
-              width: Width.QUARTER,
-              isRequired: true,
-              label: 'Scheme',
-              options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
-              initialValue: 'https://',
-              validate: value => {
-                if (value && !validSchemes.includes(value)) {
-                  return 'Invalid scheme';
-                }
-              },
-            },
-            {
-              type: FieldType.TEXT,
-              name: 'host',
-              width: Width.HALF,
-              isRequired: true,
-              label: 'Host',
-            },
-            {
-              type: FieldType.TEXT,
-              name: 'port',
-              width: Width.QUARTER,
-              isRequired: false,
-              label: 'Port',
-              initialValue: '80',
-            },
-          ],
+          width: Width.FULL,
+          blocks: [schemeField, hostField, portField],
         },
         {
           label: 'Resource',
           direction: Direction.HORIZONTAL,
-          width: Width.HALF,
-          blocks: [
-            {
-              type: FieldType.TEXT,
-              name: 'path',
-              width: Width.HALF,
-              isRequired: true,
-              label: 'Path',
-            },
-            {
-              type: FieldType.TEXT,
-              name: 'fragment',
-              width: Width.HALF,
-              isRequired: false,
-              label: 'Fragment (Hash)',
-            },
-          ],
+          width: Width.FULL,
+          blocks: [pathField, fragmentField],
         },
       ],
     },
     {
-      direction: Direction.HORIZONTAL,
+      direction: Direction.VERTICAL,
+      width: Width.HALF,
       blocks: [
         {
-          width: Width.TWO_THIRDS,
-          label: 'Query Params',
-          blocks: [
-            {
-              type: FieldType.TEXT,
-              name: 'queryParams',
-              width: Width.FULL,
-              isRequired: false,
-              label: 'Query Parameters',
-            },
-          ],
+          direction: Direction.HORIZONTAL,
+          width: Width.FULL,
+          label: 'Credentials (Optional)',
+          blocks: [usernameField, passwordField],
         },
         {
-          direction: Direction.HORIZONTAL,
-          width: Width.THIRD,
-          label: 'Credentials (Optional)',
-          blocks: [
-            {
-              type: FieldType.TEXT,
-              name: 'username',
-              width: Width.HALF,
-              isRequired: values => values.scheme === 'mailto:',
-              label: 'Username',
-            },
-            {
-              type: FieldType.TEXT,
-              name: 'password',
-              width: Width.HALF,
-              isRequired: false,
-              label: 'Password',
-            },
-          ],
+          width: Width.FULL,
+          label: 'Query Params',
+          blocks: [queryParamsField],
         },
       ],
     },

@@ -3,11 +3,14 @@ import MaterialTextField from '@material-ui/core/TextField';
 import debounce from 'lodash/debounce';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { TextFieldDeclaration } from './types';
+import type { TextFieldDeclaration } from '../types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
-export type TextFieldProps<TFieldName extends string> = TextFieldDeclaration<TFieldName> & {
+export type TextProps<TFieldName extends string> = Omit<
+  TextFieldDeclaration<TFieldName>,
+  'type'
+> & {
   readonly isRequired: boolean;
   readonly value?: string;
   readonly hasError: boolean;
@@ -17,7 +20,7 @@ export type TextFieldProps<TFieldName extends string> = TextFieldDeclaration<TFi
 
 const DEBOUNCE_MILLIS = 200;
 
-const TextField = <TFieldName extends string>({
+const Text = <TFieldName extends string>({
   name,
   isRequired,
   label,
@@ -29,7 +32,7 @@ const TextField = <TFieldName extends string>({
   hasError,
   onChange,
   onBlur,
-}: TextFieldProps<TFieldName>) => {
+}: TextProps<TFieldName>) => {
   const [localValue, setLocalValue] = useState(value ?? initialValue ?? '');
 
   const onChangeLocal = useCallback((event: TextFieldChangeEvent) => {
@@ -44,6 +47,10 @@ const TextField = <TFieldName extends string>({
   useEffect(() => {
     onChangeDebounced(localValue);
   }, [onChangeDebounced, localValue]);
+
+  useEffect(() => {
+    setLocalValue(value ?? '');
+  }, [value]);
 
   return (
     <MaterialTextField
@@ -67,4 +74,4 @@ const TextField = <TFieldName extends string>({
   );
 };
 
-export default TextField;
+export default Text;

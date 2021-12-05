@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 export type Value = string | string[];
 
 export type Values<TFieldName extends string> = { [key in TFieldName]?: Value };
@@ -77,8 +79,8 @@ export type TextFieldDeclaration<TFieldName extends string> = FieldDeclarationBa
   string
 > & {
   readonly type: FieldType.TEXT;
-  readonly prefix?: string;
-  readonly suffix?: string;
+  readonly prefix?: ReactNode;
+  readonly suffix?: ReactNode;
 };
 
 export type SelectOption = {
@@ -99,6 +101,8 @@ export type ListFieldDeclaration<TFieldName extends string> = FieldDeclarationBa
   string[]
 > & {
   readonly type: FieldType.LIST;
+  readonly prefix?: ReactNode;
+  readonly suffix?: ReactNode;
 };
 
 export type FieldDeclaration<TFieldName extends string> =
