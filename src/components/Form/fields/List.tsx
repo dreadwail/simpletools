@@ -6,12 +6,12 @@ import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Flex from '../../Flex';
 import type { ListFieldDeclaration } from '../types';
 
-import Text from './Text';
+import Text, { KeyPress } from './Text';
 
 export type ListProps<TFieldName extends string> = ListFieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
@@ -37,6 +37,10 @@ const List = <TFieldName extends string>({
   const [textToAdd, setTextToAdd] = useState<string>('');
   const [list, setList] = useState<string[]>(value ?? initialValue ?? []);
 
+  useEffect(() => {
+    onChange(...list);
+  }, [list, onChange]);
+
   const onChangeText = useCallback((newValue: string) => {
     setTextToAdd(newValue);
   }, []);
@@ -46,42 +50,60 @@ const List = <TFieldName extends string>({
     setTextToAdd('');
   }, [textToAdd]);
 
-  useEffect(() => {
-    onChange(...list);
-  }, [list, onChange]);
+  const onKeyPress = useCallback(
+    (keyPress: KeyPress) => {
+      if (keyPress.key === 'Enter') {
+        onClickAdd();
+      }
+    },
+    [onClickAdd]
+  );
 
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('textToAdd:', textToAdd);
-  }, [textToAdd]);
+  const onClickDelete = useCallback((index: number) => {
+    setList((oldList: string[]): string[] => {
+      const newList = [...oldList];
+      newList.splice(index, 1);
+      return newList;
+    });
+  }, []);
+
+  const listWithDeletes = useMemo(
+    () =>
+      list.map((entry, index) => ({
+        entry,
+        onDelete: () => onClickDelete(index),
+      })),
+    [list, onClickDelete]
+  );
 
   return (
-    <Flex flexDirection="column">
+    <Flex flexDirection="column" width="100%">
       <Flex flexDirection="row" alignItems="flex-start">
+        <Text
+          name={name}
+          isRequired={isRequired}
+          label={label}
+          helperText={helperText}
+          prefix={prefix}
+          suffix={suffix}
+          hasError={hasError}
+          value={textToAdd}
+          onBlur={onBlur}
+          onChange={onChangeText}
+          onKeyPress={onKeyPress}
+        />
         <Box m={1}>
-          <Text
-            name={name}
-            isRequired={isRequired}
-            label={label}
-            helperText={helperText}
-            prefix={prefix}
-            suffix={suffix}
-            hasError={hasError}
-            value={textToAdd}
-            onBlur={onBlur}
-            onChange={onChangeText}
-          />
+          <IconButton aria-label="add" size="small" onClick={onClickAdd} disabled={!textToAdd}>
+            <AddIcon />
+          </IconButton>
         </Box>
-        <IconButton aria-label="add" onClick={onClickAdd}>
-          <AddIcon />
-        </IconButton>
       </Flex>
       <MaterialList dense>
-        {list.map(item => (
-          <ListItem key={item} divider>
-            <ListItemText>{item}</ListItemText>
+        {listWithDeletes.map(({ entry, onDelete }) => (
+          <ListItem key={entry} divider>
+            <ListItemText>{entry}</ListItemText>
             <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="delete">
+              <IconButton edge="end" aria-label="delete" onClick={onDelete}>
                 <DeleteIcon />
               </IconButton>
             </ListItemSecondaryAction>

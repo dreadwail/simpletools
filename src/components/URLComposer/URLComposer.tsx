@@ -123,38 +123,39 @@ const passwordField: FieldDeclaration<URLFieldName> = {
 };
 
 const fields: BlockDeclaration<URLFieldName> = {
-  direction: Direction.HORIZONTAL,
+  direction: Direction.VERTICAL,
   blocks: [
     {
-      direction: Direction.VERTICAL,
-      width: Width.HALF,
+      direction: Direction.HORIZONTAL,
+      width: Width.FULL,
       blocks: [
         {
           label: 'Connection',
           direction: Direction.HORIZONTAL,
-          width: Width.FULL,
+          width: Width.TWO_THIRDS,
           blocks: [schemeField, hostField, portField],
         },
         {
-          label: 'Resource',
           direction: Direction.HORIZONTAL,
-          width: Width.FULL,
-          blocks: [pathField, fragmentField],
+          width: Width.THIRD,
+          label: 'Credentials (Optional)',
+          blocks: [usernameField, passwordField],
         },
       ],
     },
     {
-      direction: Direction.VERTICAL,
-      width: Width.HALF,
+      direction: Direction.HORIZONTAL,
+      width: Width.FULL,
       blocks: [
         {
+          label: 'Resource',
           direction: Direction.HORIZONTAL,
-          width: Width.FULL,
-          label: 'Credentials (Optional)',
-          blocks: [usernameField, passwordField],
+          width: Width.TWO_THIRDS,
+          blocks: [pathField, fragmentField],
         },
         {
-          width: Width.FULL,
+          direction: Direction.VERTICAL,
+          width: Width.THIRD,
           label: 'Query Params',
           blocks: [queryParamsField],
         },

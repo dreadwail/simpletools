@@ -1,11 +1,18 @@
 import InputAdornment from '@material-ui/core/InputAdornment';
 import MaterialTextField from '@material-ui/core/TextField';
 import debounce from 'lodash/debounce';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import noop from 'lodash/noop';
+import { useCallback, useEffect, useMemo, useState, ChangeEvent, KeyboardEvent } from 'react';
 
 import type { TextFieldDeclaration } from '../types';
 
-type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
+type TextChangeEvent = ChangeEvent<HTMLInputElement>;
+type TextKeyPressEvent = KeyboardEvent<HTMLInputElement>;
+
+export type KeyPress = {
+  readonly key: TextKeyPressEvent['key'];
+  readonly code: TextKeyPressEvent['code'];
+};
 
 export type TextProps<TFieldName extends string> = Omit<
   TextFieldDeclaration<TFieldName>,
@@ -14,8 +21,9 @@ export type TextProps<TFieldName extends string> = Omit<
   readonly isRequired: boolean;
   readonly value?: string;
   readonly hasError: boolean;
-  readonly onChange: (value: string) => void;
-  readonly onBlur: () => void;
+  readonly onChange?: (value: string) => void;
+  readonly onBlur?: () => void;
+  readonly onKeyPress?: (keyPress: KeyPress) => void;
 };
 
 const DEBOUNCE_MILLIS = 200;
@@ -32,25 +40,46 @@ const Text = <TFieldName extends string>({
   hasError,
   onChange,
   onBlur,
+  onKeyPress,
 }: TextProps<TFieldName>) => {
   const [localValue, setLocalValue] = useState(value ?? initialValue ?? '');
+  const [lastKeyPress, setLastKeyPress] = useState<KeyPress | null>(null);
 
-  const onChangeLocal = useCallback((event: TextFieldChangeEvent) => {
+  const onChangeLocal = useCallback((event: TextChangeEvent) => {
     // The event can be absent. See: https://v4.mui.com/api/input-base/#props
     if (event) {
       setLocalValue(event.target.value);
     }
   }, []);
 
-  const onChangeDebounced = useMemo(() => debounce(onChange, DEBOUNCE_MILLIS), [onChange]);
+  const onChangeDebounced = useMemo(() => debounce(onChange ?? noop, DEBOUNCE_MILLIS), [onChange]);
 
   useEffect(() => {
-    onChangeDebounced(localValue);
-  }, [onChangeDebounced, localValue]);
+    if (lastKeyPress) {
+      onKeyPress?.(lastKeyPress);
+      setLastKeyPress(null);
+    }
+  }, [lastKeyPress, onKeyPress]);
+
+  const onKeyPressWrapped = useCallback(
+    ({ key, code }: TextKeyPressEvent) => {
+      if (key === 'Enter') {
+        onChangeDebounced.flush();
+      }
+      // in order to give the consuming component a chance to update itself first following the
+      // flush, we defer the call to onKeyPress until the next render cycle
+      setLastKeyPress({ key, code });
+    },
+    [onChangeDebounced]
+  );
 
   useEffect(() => {
     setLocalValue(value ?? '');
   }, [value]);
+
+  useEffect(() => {
+    onChangeDebounced(localValue);
+  }, [onChangeDebounced, localValue]);
 
   return (
     <MaterialTextField
@@ -70,6 +99,7 @@ const Text = <TFieldName extends string>({
       required={isRequired}
       onChange={onChangeLocal}
       onBlur={onBlur}
+      onKeyPress={onKeyPressWrapped}
     />
   );
 };
