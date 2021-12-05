@@ -6,6 +6,7 @@ import FieldBlock from './FieldBlock';
 import {
   getCssWidth,
   getCssJustification,
+  isBlockDeclaration,
   FieldType,
   Errors,
   BlockDeclaration,
@@ -17,11 +18,10 @@ import {
   Values,
 } from './types';
 
-type FieldName = string;
-
 type OnChangePayload<TFieldName extends string> = {
   readonly values: Values<TFieldName>;
   readonly errors: Errors<TFieldName>;
+  readonly isValid: boolean;
 };
 
 export type OnFormChange<TFieldName extends string> = (
@@ -33,15 +33,14 @@ export type FormProps<TFieldName extends string> = {
   readonly onChange: OnFormChange<TFieldName>;
 };
 
-const isBlockDeclaration = <TFieldName extends string>(
-  block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
-): block is BlockDeclaration<TFieldName> =>
-  Array.isArray((block as BlockDeclaration<TFieldName>).blocks);
+type FieldDeclarations<TFieldName extends string> = {
+  [key in TFieldName]?: FieldDeclaration<TFieldName>;
+};
 
 const extractFields = <TFieldName extends string>(
   block: BlockDeclaration<TFieldName>
-): Record<FieldName, FieldDeclaration<TFieldName>> =>
-  block.blocks.reduce((memo, currentBlock) => {
+): FieldDeclarations<TFieldName> =>
+  block.blocks.reduce<FieldDeclarations<TFieldName>>((memo, currentBlock) => {
     if (isBlockDeclaration(currentBlock)) {
       return { ...memo, ...extractFields(currentBlock) };
     }
@@ -50,36 +49,46 @@ const extractFields = <TFieldName extends string>(
 
 const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<TFieldName>) => {
   const fieldsByName = useMemo(() => extractFields(block), [block]);
+  const fieldNames = useMemo(() => Object.keys(fieldsByName) as TFieldName[], [fieldsByName]);
   const initialValues = useMemo(
     () =>
-      Object.keys(fieldsByName).reduce<Values<TFieldName>>(
-        (memo, fieldName) => ({ ...memo, [fieldName]: fieldsByName[fieldName].initialValue }),
+      fieldNames.reduce<Values<TFieldName>>(
+        (memo, fieldName) => ({
+          ...memo,
+          [fieldName]: fieldsByName[fieldName]?.initialValue,
+        }),
         {}
       ),
-    [fieldsByName]
+    [fieldNames, fieldsByName]
   );
 
   const [values, setValues] = useState<Values<TFieldName>>(initialValues);
   const [errors, setErrors] = useState<Errors<TFieldName>>({});
   const [touched, setTouched] = useState<Touched<TFieldName>>({});
 
+  const isValid = useMemo(
+    () => fieldNames.filter(fieldName => errors[fieldName]).length === 0,
+    [fieldNames, errors]
+  );
+
   useEffect(() => {
-    onChange({ values, errors });
-  }, [onChange, values, errors]);
+    onChange({ values, errors, isValid });
+  }, [onChange, values, errors, isValid]);
 
   const onChangeField = useCallback<OnChangeHandler<TFieldName>>(
-    (name, value) => {
+    (name, ...newValues) => {
       const field = fieldsByName[name];
-      if (
-        field.type === FieldType.TEXT &&
-        field.transform &&
-        value !== null &&
-        value !== undefined
-      ) {
-        const transformed = field.transform(value);
-        setValues(oldValues => ({ ...oldValues, [name]: transformed }));
-      } else {
-        setValues(oldValues => ({ ...oldValues, [name]: value }));
+      if (!field) {
+        return;
+      }
+
+      switch (field.type) {
+        case FieldType.LIST:
+          setValues(oldValues => ({ ...oldValues, [name]: newValues }));
+          break;
+        default:
+          setValues(oldValues => ({ ...oldValues, [name]: newValues[0] }));
+          break;
       }
     },
     [fieldsByName]
@@ -90,29 +99,41 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
   }, []);
 
   useEffect(() => {
-    const newErrors = Object.keys(fieldsByName).reduce<Errors<TFieldName>>((memo, fieldName) => {
+    const newErrors = fieldNames.reduce<Errors<TFieldName>>((memo, fieldName) => {
       const field = fieldsByName[fieldName];
       if (!field) {
-        return memo;
-      }
-
-      const hasBeenTouched = !!touched[field.name];
-      if (!hasBeenTouched) {
         return memo;
       }
 
       const isRequired =
         typeof field.isRequired === 'boolean' ? field.isRequired : !!field.isRequired?.(values);
 
-      if (isRequired && !values[field.name]) {
-        return { ...memo, [fieldName]: 'Required' };
+      switch (field.type) {
+        case FieldType.TEXT:
+        case FieldType.SELECT:
+          const textValue = values[field.name] as string | undefined;
+          if (!textValue) {
+            if (isRequired) {
+              return { ...memo, [fieldName]: 'Required' };
+            }
+            return memo;
+          }
+          return { ...memo, [fieldName]: field.validate?.(textValue, values) };
+        case FieldType.LIST:
+          const listValue = values[field.name] as string[] | undefined;
+          if (!listValue || listValue.length === 0) {
+            if (isRequired) {
+              return { ...memo, [fieldName]: 'Required' };
+            }
+            return memo;
+          }
+          return { ...memo, [fieldName]: field.validate?.(listValue, values) };
+        default:
+          return memo;
       }
-
-      const maybeError = field.validate?.(values);
-      return { ...memo, [fieldName]: maybeError };
     }, {});
     setErrors(oldErrors => ({ ...oldErrors, ...newErrors }));
-  }, [fieldsByName, values, touched]);
+  }, [fieldNames, fieldsByName, values]);
 
   return (
     <>
@@ -126,7 +147,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
           onBlurField={onBlurField}
         />
       </Flex>
-      <pre>{JSON.stringify({ values, errors, touched }, null, 2)}</pre>
+      <pre>{JSON.stringify({ values, errors, touched, isValid }, null, 2)}</pre>
     </>
   );
 };

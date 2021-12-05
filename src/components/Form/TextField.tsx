@@ -3,15 +3,15 @@ import MaterialTextField from '@material-ui/core/TextField';
 import debounce from 'lodash/debounce';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type { TextFieldDeclaration, Value } from './types';
+import type { TextFieldDeclaration } from './types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 export type TextFieldProps<TFieldName extends string> = TextFieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
-  readonly value?: Value;
+  readonly value?: string;
   readonly hasError: boolean;
-  readonly onChange: (value: Value) => void;
+  readonly onChange: (value: string) => void;
   readonly onBlur: () => void;
 };
 

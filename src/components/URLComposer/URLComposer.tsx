@@ -67,8 +67,7 @@ const fields: BlockDeclaration<URLFieldName> = {
               label: 'Scheme',
               options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
               initialValue: 'https://',
-              validate: values => {
-                const value = values.scheme;
+              validate: value => {
                 if (value && !validSchemes.includes(value)) {
                   return 'Invalid scheme';
                 }

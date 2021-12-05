@@ -2,14 +2,14 @@ import { useCallback, useMemo } from 'react';
 
 import SelectField from './SelectField';
 import TextField from './TextField';
-import { FieldType, Error, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
+import { FieldType, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
 
 export type FieldProps<TFieldName extends string> = FieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
   readonly hasBeenTouched: boolean;
-  readonly error?: Error;
+  readonly error?: string;
   readonly value?: Value;
   readonly onChangeField: OnChangeHandler<TFieldName>;
   readonly onBlurField: OnBlurHandler<TFieldName>;
@@ -30,7 +30,7 @@ const Field = <TFieldName extends string>({
   ...field
 }: FieldProps<TFieldName>) => {
   const onChangeHandler = useCallback(
-    (newValue: Value) => {
+    (newValue: string) => {
       onChangeField(field.name, newValue);
     },
     [onChangeField, field.name]
@@ -41,21 +41,18 @@ const Field = <TFieldName extends string>({
   }, [onBlurField, field.name]);
 
   const adjustedHelperText = useMemo((): HelperText => {
-    if (error) {
+    if (hasBeenTouched && error) {
       return { text: error, isError: true };
     }
-    if (isRequired && !value) {
-      return { text: 'Required', isError: hasBeenTouched };
-    }
     return { text: field.helperText ?? DEFAULT_HELPER_TEXT, isError: false };
-  }, [error, isRequired, value, field.helperText, hasBeenTouched]);
+  }, [error, field.helperText, hasBeenTouched]);
 
   switch (field.type) {
     case FieldType.SELECT:
       return (
         <SelectField
           {...field}
-          value={value}
+          value={value as string | undefined}
           options={field.options}
           isRequired={isRequired}
           helperText={adjustedHelperText.text}
@@ -65,11 +62,10 @@ const Field = <TFieldName extends string>({
         />
       );
     case FieldType.TEXT:
-    default:
       return (
         <TextField
           {...field}
-          value={value}
+          value={value as string | undefined}
           isRequired={isRequired}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}
@@ -77,6 +73,8 @@ const Field = <TFieldName extends string>({
           onBlur={onBlurHandler}
         />
       );
+    default:
+      return null;
   }
 };
 

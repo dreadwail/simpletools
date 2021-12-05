@@ -1,17 +1,16 @@
-import InputAdornment from '@material-ui/core/InputAdornment';
 import MenuItem from '@material-ui/core/MenuItem';
 import MaterialTextField from '@material-ui/core/TextField';
 import { useCallback } from 'react';
 
-import type { SelectFieldDeclaration, Value } from './types';
+import type { SelectFieldDeclaration } from './types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 export type SelectFieldProps<TFieldName extends string> = SelectFieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
-  readonly value?: Value;
+  readonly value?: string;
   readonly hasError: boolean;
-  readonly onChange: (value: Value) => void;
+  readonly onChange: (value: string) => void;
   readonly onBlur: () => void;
 };
 
@@ -20,8 +19,6 @@ const SelectField = <TFieldName extends string>({
   isRequired,
   label,
   helperText,
-  prefix,
-  suffix,
   initialValue,
   value,
   options,
@@ -48,10 +45,6 @@ const SelectField = <TFieldName extends string>({
       margin="none"
       variant="outlined"
       label={label}
-      InputProps={{
-        startAdornment: prefix ? <InputAdornment position="start">{prefix}</InputAdornment> : null,
-        endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
-      }}
       value={value ?? initialValue ?? ''}
       error={hasError}
       helperText={helperText}

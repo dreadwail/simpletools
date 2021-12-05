@@ -1,8 +1,7 @@
-export type Value = string;
-export type Error = string;
+export type Value = string | string[];
 
 export type Values<TFieldName extends string> = { [key in TFieldName]?: Value };
-export type Errors<TFieldName extends string> = { [key in TFieldName]?: Error };
+export type Errors<TFieldName extends string> = { [key in TFieldName]?: string };
 export type Touched<TFieldName extends string> = { [key in TFieldName]?: boolean };
 
 export enum Direction {
@@ -56,24 +55,30 @@ export const getCssJustification = (alignment: Alignment = Alignment.CENTER): st
 export enum FieldType {
   TEXT,
   SELECT,
+  LIST,
 }
 
-type FieldDeclarationBase<TFieldName extends string> = {
+type FieldDeclarationBase<TFieldName extends string, TValue extends Value> = {
   readonly type: FieldType;
   readonly name: TFieldName;
   readonly width?: Width;
   readonly isRequired?: boolean | ((values: Values<TFieldName>) => boolean);
   readonly label: string;
   readonly helperText?: string;
-  readonly prefix?: string;
-  readonly suffix?: string;
-  readonly initialValue?: Value;
-  readonly validate?: (values: Values<TFieldName>) => Error | null | undefined | void;
+  readonly initialValue?: TValue;
+  readonly validate?: (
+    value: TValue,
+    values: Values<TFieldName>
+  ) => string | null | undefined | void;
 };
 
-export type TextFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<TFieldName> & {
+export type TextFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
+  TFieldName,
+  string
+> & {
   readonly type: FieldType.TEXT;
-  readonly transform?: (value: string) => string;
+  readonly prefix?: string;
+  readonly suffix?: string;
 };
 
 export type SelectOption = {
@@ -81,14 +86,25 @@ export type SelectOption = {
   readonly value: string;
 };
 
-export type SelectFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<TFieldName> & {
+export type SelectFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
+  TFieldName,
+  string
+> & {
   readonly type: FieldType.SELECT;
   readonly options: SelectOption[];
 };
 
+export type ListFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
+  TFieldName,
+  string[]
+> & {
+  readonly type: FieldType.LIST;
+};
+
 export type FieldDeclaration<TFieldName extends string> =
   | TextFieldDeclaration<TFieldName>
-  | SelectFieldDeclaration<TFieldName>;
+  | SelectFieldDeclaration<TFieldName>
+  | ListFieldDeclaration<TFieldName>;
 
 export type BlockDeclaration<TFieldName extends string> = {
   readonly direction?: Direction;
@@ -98,10 +114,14 @@ export type BlockDeclaration<TFieldName extends string> = {
   readonly blocks: (FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>)[];
 };
 
+export const isBlockDeclaration = <TFieldName extends string>(
+  block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
+): block is BlockDeclaration<TFieldName> =>
+  Array.isArray((block as BlockDeclaration<TFieldName>).blocks);
+
 export type OnChangeHandler<TFieldName extends string> = (
-  name: FieldDeclaration<TFieldName>['name'],
-  value: Value
+  name: TFieldName,
+  ...values: string[]
 ) => void;
-export type OnBlurHandler<TFieldName extends string> = (
-  name: FieldDeclaration<TFieldName>['name']
-) => void;
+
+export type OnBlurHandler<TFieldName extends string> = (name: TFieldName) => void;
