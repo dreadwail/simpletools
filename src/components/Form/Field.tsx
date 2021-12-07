@@ -3,7 +3,17 @@ import { useCallback, useMemo } from 'react';
 import List from './fields/List';
 import Select from './fields/Select';
 import Text from './fields/Text';
-import { FieldType, FieldDeclaration, OnBlurHandler, OnChangeHandler, Value } from './types';
+import TupleList from './fields/TupleList';
+import {
+  FieldType,
+  FieldDeclaration,
+  OnBlurHandler,
+  OnChangeHandler,
+  Value,
+  SingleValue,
+  ListValue,
+  TupleListValue,
+} from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
 
@@ -31,8 +41,8 @@ const Field = <TFieldName extends string>({
   ...field
 }: FieldProps<TFieldName>) => {
   const onChangeHandler = useCallback(
-    (...newValues: string[]) => {
-      onChangeField(field.name, ...newValues);
+    (newValue: Value) => {
+      onChangeField(field.name, newValue);
     },
     [onChangeField, field.name]
   );
@@ -53,7 +63,7 @@ const Field = <TFieldName extends string>({
       return (
         <Select
           {...field}
-          value={value as string | undefined}
+          value={value as SingleValue | undefined}
           options={field.options}
           isRequired={isRequired}
           helperText={adjustedHelperText.text}
@@ -66,7 +76,7 @@ const Field = <TFieldName extends string>({
       return (
         <Text
           {...field}
-          value={value as string | undefined}
+          value={value as SingleValue | undefined}
           isRequired={isRequired}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}
@@ -78,7 +88,19 @@ const Field = <TFieldName extends string>({
       return (
         <List
           {...field}
-          value={value as string[] | undefined}
+          value={value as ListValue | undefined}
+          isRequired={isRequired}
+          helperText={adjustedHelperText.text}
+          hasError={adjustedHelperText.isError}
+          onChange={onChangeHandler}
+          onBlur={onBlurHandler}
+        />
+      );
+    case FieldType.TUPLE_LIST:
+      return (
+        <TupleList
+          {...field}
+          value={value as TupleListValue | undefined}
           isRequired={isRequired}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}

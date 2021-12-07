@@ -2,18 +2,19 @@ import MenuItem from '@material-ui/core/MenuItem';
 import MaterialTextField from '@material-ui/core/TextField';
 import { useCallback } from 'react';
 
-import type { SelectFieldDeclaration } from '../types';
+import type { SelectFieldDeclaration, SingleValue } from '../types';
 
 type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 export type SelectProps<TFieldName extends string> = Omit<
   SelectFieldDeclaration<TFieldName>,
-  'type'
+  'type' | 'name'
 > & {
+  readonly name?: string;
   readonly isRequired: boolean;
-  readonly value?: string;
+  readonly value?: SingleValue;
   readonly hasError: boolean;
-  readonly onChange: (value: string) => void;
+  readonly onChange: (value: SingleValue) => void;
   readonly onBlur: () => void;
 };
 

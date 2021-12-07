@@ -2,9 +2,17 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 import MaterialTextField from '@material-ui/core/TextField';
 import debounce from 'lodash/debounce';
 import noop from 'lodash/noop';
-import { useCallback, useEffect, useMemo, useState, ChangeEvent, KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  ChangeEvent,
+  KeyboardEvent,
+  RefObject,
+} from 'react';
 
-import type { TextFieldDeclaration } from '../types';
+import type { SingleValue, TextFieldDeclaration } from '../types';
 
 type TextChangeEvent = ChangeEvent<HTMLInputElement>;
 type TextKeyPressEvent = KeyboardEvent<HTMLInputElement>;
@@ -16,14 +24,16 @@ export type KeyPress = {
 
 export type TextProps<TFieldName extends string> = Omit<
   TextFieldDeclaration<TFieldName>,
-  'type'
+  'type' | 'name'
 > & {
+  readonly name?: string;
   readonly isRequired: boolean;
-  readonly value?: string;
+  readonly value?: SingleValue;
   readonly hasError: boolean;
-  readonly onChange?: (value: string) => void;
+  readonly onChange?: (value: SingleValue) => void;
   readonly onBlur?: () => void;
   readonly onKeyPress?: (keyPress: KeyPress) => void;
+  readonly inputRef?: RefObject<HTMLInputElement>;
 };
 
 const DEBOUNCE_MILLIS = 200;
@@ -41,6 +51,7 @@ const Text = <TFieldName extends string>({
   onChange,
   onBlur,
   onKeyPress,
+  inputRef,
 }: TextProps<TFieldName>) => {
   const [localValue, setLocalValue] = useState(value ?? initialValue ?? '');
   const [lastKeyPress, setLastKeyPress] = useState<KeyPress | null>(null);
@@ -89,6 +100,7 @@ const Text = <TFieldName extends string>({
       margin="none"
       variant="outlined"
       label={label}
+      inputRef={inputRef}
       InputProps={{
         startAdornment: prefix ? <InputAdornment position="start">{prefix}</InputAdornment> : null,
         endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,

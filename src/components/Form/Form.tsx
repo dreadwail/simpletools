@@ -16,6 +16,9 @@ import {
   Width,
   Touched,
   Values,
+  SingleValue,
+  ListValue,
+  TupleListValue,
 } from './types';
 
 type OnChangePayload<TFieldName extends string> = {
@@ -76,20 +79,12 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
   }, [onChange, values, errors, isValid]);
 
   const onChangeField = useCallback<OnChangeHandler<TFieldName>>(
-    (name, ...newValues) => {
+    (name, newValue) => {
       const field = fieldsByName[name];
       if (!field) {
         return;
       }
-
-      switch (field.type) {
-        case FieldType.LIST:
-          setValues(oldValues => ({ ...oldValues, [name]: newValues }));
-          break;
-        default:
-          setValues(oldValues => ({ ...oldValues, [name]: newValues[0] }));
-          break;
-      }
+      setValues(oldValues => ({ ...oldValues, [name]: newValue }));
     },
     [fieldsByName]
   );
@@ -111,7 +106,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
       switch (field.type) {
         case FieldType.TEXT:
         case FieldType.SELECT:
-          const textValue = values[field.name] as string | undefined;
+          const textValue = values[field.name] as SingleValue | undefined;
           if (!textValue) {
             if (isRequired) {
               return { ...memo, [fieldName]: 'Required' };
@@ -120,7 +115,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
           }
           return { ...memo, [fieldName]: field.validate?.(textValue, values) };
         case FieldType.LIST:
-          const listValue = values[field.name] as string[] | undefined;
+          const listValue = values[field.name] as ListValue | undefined;
           if (!listValue || listValue.length === 0) {
             if (isRequired) {
               return { ...memo, [fieldName]: 'Required' };
@@ -128,6 +123,15 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
             return memo;
           }
           return { ...memo, [fieldName]: field.validate?.(listValue, values) };
+        case FieldType.TUPLE_LIST:
+          const tupleListValue = values[field.name] as TupleListValue | undefined;
+          if (!tupleListValue || tupleListValue.length === 0) {
+            if (isRequired) {
+              return { ...memo, [fieldName]: 'Required' };
+            }
+            return memo;
+          }
+          return { ...memo, [fieldName]: field.validate?.(tupleListValue, values) };
         default:
           return memo;
       }

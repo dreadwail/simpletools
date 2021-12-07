@@ -99,11 +99,14 @@ const fragmentField: FieldDeclaration<URLFieldName> = {
 };
 
 const queryParamsField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.LIST,
+  type: FieldType.TUPLE_LIST,
   name: 'queryParams',
   width: Width.FULL,
   isRequired: false,
-  label: 'Query Parameters',
+  label: 'Query Params',
+  fieldLabel1: 'Key',
+  fieldLabel2: 'Value',
+  separator: '=',
 };
 
 const usernameField: FieldDeclaration<URLFieldName> = {
@@ -132,12 +135,12 @@ const fields: BlockDeclaration<URLFieldName> = {
         {
           label: 'Connection',
           direction: Direction.HORIZONTAL,
-          width: Width.TWO_THIRDS,
+          width: Width.HALF,
           blocks: [schemeField, hostField, portField],
         },
         {
           direction: Direction.HORIZONTAL,
-          width: Width.THIRD,
+          width: Width.HALF,
           label: 'Credentials (Optional)',
           blocks: [usernameField, passwordField],
         },
@@ -150,12 +153,12 @@ const fields: BlockDeclaration<URLFieldName> = {
         {
           label: 'Resource',
           direction: Direction.HORIZONTAL,
-          width: Width.TWO_THIRDS,
+          width: Width.HALF,
           blocks: [pathField, fragmentField],
         },
         {
           direction: Direction.VERTICAL,
-          width: Width.THIRD,
+          width: Width.HALF,
           label: 'Query Params',
           blocks: [queryParamsField],
         },

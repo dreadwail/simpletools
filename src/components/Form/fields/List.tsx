@@ -9,15 +9,19 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import Flex from '../../Flex';
-import type { ListFieldDeclaration } from '../types';
+import type { ListFieldDeclaration, ListValue } from '../types';
 
 import Text, { KeyPress } from './Text';
 
-export type ListProps<TFieldName extends string> = ListFieldDeclaration<TFieldName> & {
+export type ListProps<TFieldName extends string> = Omit<
+  ListFieldDeclaration<TFieldName>,
+  'type' | 'name'
+> & {
+  readonly name?: string;
   readonly isRequired: boolean;
-  readonly value?: string[];
+  readonly value?: ListValue;
   readonly hasError: boolean;
-  readonly onChange: (...values: string[]) => void;
+  readonly onChange: (value: ListValue) => void;
   readonly onBlur: () => void;
 };
 
@@ -35,18 +39,18 @@ const List = <TFieldName extends string>({
   onBlur,
 }: ListProps<TFieldName>) => {
   const [textToAdd, setTextToAdd] = useState<string>('');
-  const [list, setList] = useState<string[]>(value ?? initialValue ?? []);
+  const [list, setList] = useState<ListValue>(value ?? initialValue ?? []);
 
   useEffect(() => {
-    onChange(...list);
+    onChange(list);
   }, [list, onChange]);
 
-  const onChangeText = useCallback((newValue: string) => {
-    setTextToAdd(newValue);
+  const onChangeText = useCallback((newText: string) => {
+    setTextToAdd(newText);
   }, []);
 
   const onClickAdd = useCallback(() => {
-    setList((oldList: string[]): string[] => [...oldList, textToAdd]);
+    setList((oldList: ListValue): ListValue => [...oldList, textToAdd]);
     setTextToAdd('');
   }, [textToAdd]);
 
@@ -60,7 +64,7 @@ const List = <TFieldName extends string>({
   );
 
   const onClickDelete = useCallback((index: number) => {
-    setList((oldList: string[]): string[] => {
+    setList((oldList: ListValue): ListValue => {
       const newList = [...oldList];
       newList.splice(index, 1);
       return newList;
@@ -92,7 +96,7 @@ const List = <TFieldName extends string>({
           onChange={onChangeText}
           onKeyPress={onKeyPress}
         />
-        <Box m={1}>
+        <Box my={1}>
           <IconButton aria-label="add" size="small" onClick={onClickAdd} disabled={!textToAdd}>
             <AddIcon />
           </IconButton>
