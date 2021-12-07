@@ -1,6 +1,11 @@
 import Box from '@material-ui/core/Box';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
 import Paper from '@material-ui/core/Paper';
 import WebIcon from '@material-ui/icons/Language';
+import LinkIcon from '@material-ui/icons/Link';
 import { FC, useCallback, useMemo, useState } from 'react';
 
 import Flex from '../Flex';
@@ -10,28 +15,16 @@ import Form, {
   FieldType,
   FormProps,
   Direction,
-  Errors,
   Width,
   Values,
   Value,
 } from '../Form';
 import Heading from '../Heading';
+import Link, { LinkProps } from '../Link';
 import Text from '../Text';
 
 /*
-generated url
 copy button for generated url
-
-additional resources section
-https://developer.mozilla.org/en-US/docs/Web/API/URL
-https://en.wikipedia.org/wiki/URL
-https://url.spec.whatwg.org/#urls
-*/
-
-/*
-WIP:
-
-form control for accumulating many values (query params)
 */
 const validSchemes: string[] = [
   'https://',
@@ -135,43 +128,25 @@ const passwordField: FieldDeclaration<URLFieldName> = {
 };
 
 const fields: BlockDeclaration<URLFieldName> = {
-  direction: Direction.VERTICAL,
   blocks: [
     {
+      label: 'Connection',
       direction: Direction.HORIZONTAL,
-      width: Width.FULL,
-      blocks: [
-        {
-          label: 'Connection',
-          direction: Direction.HORIZONTAL,
-          width: Width.HALF,
-          blocks: [schemeField, hostField, portField],
-        },
-        {
-          label: 'Resource',
-          direction: Direction.HORIZONTAL,
-          width: Width.HALF,
-          blocks: [pathField, fragmentField],
-        },
-      ],
+      blocks: [schemeField, hostField, portField],
     },
     {
+      label: 'Resource',
       direction: Direction.HORIZONTAL,
-      width: Width.FULL,
-      blocks: [
-        {
-          direction: Direction.HORIZONTAL,
-          width: Width.HALF,
-          label: 'Credentials (Optional)',
-          blocks: [usernameField, passwordField],
-        },
-        {
-          label: 'Query Params',
-          direction: Direction.VERTICAL,
-          width: Width.HALF,
-          blocks: [queryParamsField],
-        },
-      ],
+      blocks: [pathField, fragmentField],
+    },
+    {
+      label: 'Credentials (Optional)',
+      direction: Direction.HORIZONTAL,
+      blocks: [usernameField, passwordField],
+    },
+    {
+      label: 'Query Params',
+      blocks: [queryParamsField],
     },
   ],
 };
@@ -221,20 +196,23 @@ const normalizePath = (path: Value | undefined): string => {
   return '';
 };
 
+const additionalResources: LinkProps[] = [
+  { children: 'MDN: URL', href: 'https://developer.mozilla.org/en-US/docs/Web/API/URL' },
+  { children: 'Wikipedia: URL', href: 'https://en.wikipedia.org/wiki/URL' },
+  { children: 'WHATWG: URL Living Standard', href: 'https://url.spec.whatwg.org/#urls' },
+];
+
 const URLComposer: FC = () => {
   const [values, setValues] = useState<Values<URLFieldName>>({});
-  const [errors, setErrors] = useState<Errors<URLFieldName>>({});
-  // const [isValid, setIsValid] = useState<boolean>(false);
+  const [isValid, setIsValid] = useState<boolean>(false);
 
   const onChange = useCallback<FormProps<URLFieldName>['onChange']>(payload => {
     setValues(payload.values);
-    setErrors(payload.errors);
-    // setIsValid(payload.isValid);
+    setIsValid(payload.isValid);
   }, []);
 
   const url = useMemo(() => {
-    const hasErrors = Object.values(errors).filter(val => val).length > 0;
-    if (hasErrors) {
+    if (!isValid) {
       return '';
     }
     const { scheme, host, port, path, queryParams, fragment, username, password } = values;
@@ -249,7 +227,7 @@ const URLComposer: FC = () => {
       params,
       normalizeFragment(fragment),
     ].join('');
-  }, [values, errors]);
+  }, [values, isValid]);
 
   return (
     <div>
@@ -266,7 +244,26 @@ const URLComposer: FC = () => {
           </Flex>
         </Paper>
       </Box>
-      <Form fields={fields} onChange={onChange} />
+      <Flex>
+        <Form fields={fields} onChange={onChange} />
+        <Box p={4} flexBasis="50%">
+          <Heading level={3} visualLevel={6}>
+            Additional Resources:
+          </Heading>
+          <List dense>
+            {additionalResources.map(({ href, children }) => (
+              <ListItem key={href}>
+                <ListItemIcon>
+                  <LinkIcon />
+                </ListItemIcon>
+                <ListItemText>
+                  <Link href={href}>{children}</Link>
+                </ListItemText>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
+      </Flex>
     </div>
   );
 };

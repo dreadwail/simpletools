@@ -57,8 +57,14 @@ const Field = <TFieldName extends string>({
     if (hasBeenTouched && error) {
       return { text: error, isError: true };
     }
-    return { text: field.helperText ?? DEFAULT_HELPER_TEXT, isError: false };
-  }, [error, field.helperText, hasBeenTouched]);
+    if (field.helperText) {
+      return { text: field.helperText, isError: false };
+    }
+    if (isRequired) {
+      return { text: 'Required', isError: false };
+    }
+    return { text: DEFAULT_HELPER_TEXT, isError: false };
+  }, [error, field.helperText, hasBeenTouched, isRequired]);
 
   switch (field.type) {
     case FieldType.SELECT:

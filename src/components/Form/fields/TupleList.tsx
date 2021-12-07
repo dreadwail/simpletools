@@ -103,6 +103,7 @@ const TupleList = <TFieldName extends string>({
           const fieldHasValue = tupleToAdd[index];
           if (allFieldsHaveValue) {
             onClickAdd();
+            inputsRef.current[0]?.focus();
           } else if (fieldHasValue) {
             const firstEmptyField = tupleToAdd.findIndex(field => !field);
             inputsRef.current[firstEmptyField]?.focus();

@@ -11,18 +11,16 @@ type FieldSetProps = {
 
 const FieldSet: FC<FieldSetProps> = ({ label, children }) => (
   <Paper variant="elevation" elevation={0}>
-    <Box pb={1}>
-      <FormControl component="fieldset" fullWidth>
-        <Box mb={1}>
-          <FormLabel component="legend">
-            <Typography variant="subtitle2" color="primary">
-              {label}
-            </Typography>
-          </FormLabel>
-        </Box>
-        {children}
-      </FormControl>
-    </Box>
+    <FormControl component="fieldset" fullWidth>
+      <Box mb={1}>
+        <FormLabel component="legend">
+          <Typography variant="subtitle2" color="primary">
+            {label}
+          </Typography>
+        </FormLabel>
+      </Box>
+      {children}
+    </FormControl>
   </Paper>
 );
 
