@@ -8,7 +8,7 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Flex from '../../Flex';
 import type { TupleListFieldDeclaration, TupleListValue, TupleValue } from '../types';
@@ -17,20 +17,22 @@ import Text, { KeyPress } from './Text';
 
 export type TupleListProps<TFieldName extends string> = Omit<
   TupleListFieldDeclaration<TFieldName>,
-  'type' | 'name'
+  'type' | 'name' | 'isRequired' | 'isDisabled'
 > & {
-  readonly isRequired: boolean;
+  readonly name?: string;
+  readonly isRequired?: boolean;
+  readonly isDisabled?: boolean;
   readonly value?: TupleListValue;
-  readonly hasError: boolean;
-  readonly onChange: (value: TupleListValue) => void;
-  readonly onBlur: () => void;
+  readonly hasError?: boolean;
+  readonly onChange?: (value: TupleListValue) => void;
+  readonly onBlur?: () => void;
 };
 
 const TupleList = <TFieldName extends string>({
   isRequired,
+  isDisabled,
   label,
-  fieldLabel1,
-  fieldLabel2,
+  fields,
   separator,
   helperText,
   initialValue,
@@ -39,60 +41,83 @@ const TupleList = <TFieldName extends string>({
   onChange,
   onBlur,
 }: TupleListProps<TFieldName>) => {
-  const [textToAdd, setTextToAdd] = useState<Record<number, string>>({ 0: '', 1: '' });
+  const initialTupleToAdd = useMemo(() => Array<string>(fields.length).fill(''), [fields]);
+
+  const initialTouched = useMemo(() => Array<boolean>(fields.length).fill(false), [fields]);
+
+  const [tupleToAdd, setTupleToAdd] = useState<TupleValue>(initialTupleToAdd);
   const [tupleList, setTupleList] = useState<TupleListValue>(value ?? initialValue ?? []);
-  const [touched, setTouched] = useState<Record<number, boolean>>({ 0: false, 1: false });
+  const [touched, setTouched] = useState<boolean[]>(initialTouched);
 
   useEffect(() => {
-    onChange(tupleList);
+    onChange?.(tupleList);
   }, [tupleList, onChange]);
 
   const onChangeText = useCallback((index: number, newText: string) => {
-    setTextToAdd(oldTextToAdd => ({ ...oldTextToAdd, [index]: newText }));
+    setTupleToAdd(oldTupleToAdd => {
+      const newTupleToAdd = [...oldTupleToAdd];
+      newTupleToAdd[index] = newText;
+      return newTupleToAdd;
+    });
   }, []);
 
-  const onChangeText0 = useCallback((newText: string) => onChangeText(0, newText), [onChangeText]);
-  const onChangeText1 = useCallback((newText: string) => onChangeText(1, newText), [onChangeText]);
-
-  const onBlurText = useCallback((index: number) => {
-    setTouched(oldTouched => ({ ...oldTouched, [index]: true }));
-  }, []);
-
-  const onBlurText0 = useCallback(() => onBlurText(0), [onBlurText]);
-  const onBlurText1 = useCallback(() => onBlurText(0), [onBlurText]);
-
-  useEffect(() => {
-    if (touched[0] && touched[1]) {
-      onBlur();
-    }
-  }, [touched, onBlur]);
-
-  const onClickAdd = useCallback(() => {
-    const newTuple: TupleValue = [textToAdd[0], textToAdd[1]];
-    setTupleList((oldTupleList: TupleListValue): TupleListValue => [...oldTupleList, newTuple]);
-    setTextToAdd({ 0: '', 1: '' });
-  }, [textToAdd]);
-
-  const input0Ref = useRef<HTMLInputElement>(null);
-  const input1Ref = useRef<HTMLInputElement>(null);
-
-  const onKeyPress0 = useCallback(
-    (keyPress: KeyPress) => {
-      if (keyPress.key === 'Enter' && textToAdd[0]) {
-        input1Ref.current?.focus();
-      }
-    },
-    [textToAdd]
+  const onChangeTexts = useMemo(
+    () => fields.map((_, index) => (newText: string) => onChangeText(index, newText)),
+    [fields, onChangeText]
   );
 
-  const onKeyPress1 = useCallback(
-    (keyPress: KeyPress) => {
-      if (keyPress.key === 'Enter' && textToAdd[0] && textToAdd[1]) {
-        onClickAdd();
-        input0Ref.current?.focus();
+  const onBlurText = useCallback((index: number) => {
+    setTouched(oldTouched => {
+      const newTouched = [...oldTouched];
+      newTouched[index] = true;
+      return newTouched;
+    });
+  }, []);
+
+  const onBlurTexts = useMemo(
+    () => fields.map((_, index) => () => onBlurText(index)),
+    [fields, onBlurText]
+  );
+
+  useEffect(() => {
+    const allTouched = touched.every(isTouched => isTouched);
+    if (allTouched) {
+      onBlur?.();
+    }
+  }, [fields, onBlur, touched]);
+
+  const onClickAdd = useCallback(() => {
+    setTupleList((oldTupleList: TupleListValue): TupleListValue => [...oldTupleList, tupleToAdd]);
+    setTupleToAdd(initialTupleToAdd);
+  }, [initialTupleToAdd, tupleToAdd]);
+
+  const inputsRef = useRef<HTMLInputElement[]>(Array(fields.length).fill(null));
+
+  const allFieldsHaveValue = useMemo(() => tupleToAdd.every(field => field), [tupleToAdd]);
+
+  const onKeyPress = useCallback(
+    (index: number, keyPress: KeyPress) => {
+      if (keyPress.key === 'Enter') {
+        const isLastField = index === fields.length - 1;
+        if (isLastField) {
+          const fieldHasValue = tupleToAdd[index];
+          if (allFieldsHaveValue) {
+            onClickAdd();
+          } else if (fieldHasValue) {
+            const firstEmptyField = tupleToAdd.findIndex(field => !field);
+            inputsRef.current[firstEmptyField]?.focus();
+          }
+        } else {
+          inputsRef.current[index + 1]?.focus();
+        }
       }
     },
-    [onClickAdd, textToAdd]
+    [allFieldsHaveValue, fields.length, onClickAdd, tupleToAdd]
+  );
+
+  const onKeyPresses = useMemo(
+    () => fields.map((_, index) => (keyPress: KeyPress) => onKeyPress(index, keyPress)),
+    [fields, onKeyPress]
   );
 
   const onClickDelete = useCallback((index: number) => {
@@ -103,7 +128,7 @@ const TupleList = <TFieldName extends string>({
     });
   }, []);
 
-  const listWithDeletes = useMemo(
+  const tuplesWithDeletes = useMemo(
     () =>
       tupleList.map((tuple, index) => ({
         tuple,
@@ -112,40 +137,41 @@ const TupleList = <TFieldName extends string>({
     [tupleList, onClickDelete]
   );
 
+  const isFirstField = useCallback((index: number) => index === 0, []);
+  const isLastField = useCallback((index: number) => index === fields.length - 1, [fields.length]);
+
   return (
     <Flex flexDirection="column" width="100%">
       <Flex flexDirection="row" alignItems="flex-start">
-        <Text
-          isRequired={isRequired}
-          label={`${label} ${fieldLabel1}`}
-          helperText={helperText}
-          inputRef={input0Ref}
-          hasError={hasError}
-          value={textToAdd[0]}
-          onBlur={onBlurText0}
-          onChange={onChangeText0}
-          onKeyPress={onKeyPress0}
-        />
-        <Box my={1} mx={0.5}>
-          {separator}
-        </Box>
-        <Text
-          isRequired={false}
-          label={`${label} ${fieldLabel2}`}
-          helperText={' '}
-          inputRef={input1Ref}
-          hasError={hasError}
-          value={textToAdd[1]}
-          onBlur={onBlurText1}
-          onChange={onChangeText1}
-          onKeyPress={onKeyPress1}
-        />
+        {fields.map((field, index) => (
+          <Fragment key={field}>
+            <Text
+              isRequired={isRequired && isLastField(index)}
+              isDisabled={isDisabled}
+              label={`${label} - ${field}`}
+              helperText={isFirstField(index) ? helperText : ''}
+              inputRef={(element: HTMLInputElement) => {
+                inputsRef.current[index] = element;
+              }}
+              hasError={hasError}
+              value={tupleToAdd[index]}
+              onBlur={onBlurTexts[index]}
+              onChange={onChangeTexts[index]}
+              onKeyPress={onKeyPresses[index]}
+            />
+            {!isLastField(index) && (
+              <Box my={1} mx={0.5}>
+                {separator}
+              </Box>
+            )}
+          </Fragment>
+        ))}
         <Box my={1}>
           <IconButton
             aria-label="add"
             size="small"
             onClick={onClickAdd}
-            disabled={!textToAdd[0] && !textToAdd[1]}
+            disabled={!allFieldsHaveValue}
           >
             <AddIcon />
           </IconButton>
@@ -155,18 +181,24 @@ const TupleList = <TFieldName extends string>({
         <Table size="small" aria-label={label}>
           <TableHead>
             <TableRow>
-              <TableCell>{fieldLabel1}</TableCell>
-              <TableCell />
-              <TableCell>{fieldLabel2}</TableCell>
+              {fields.map((field, index) => (
+                <Fragment key={field}>
+                  <TableCell>{field}</TableCell>
+                  {!isLastField(index) && <TableCell />}
+                </Fragment>
+              ))}
               <TableCell aria-label="delete" />
             </TableRow>
           </TableHead>
           <TableBody>
-            {listWithDeletes.map(({ tuple, onDelete }, index) => (
-              <TableRow key={`tuple-${index}`}>
-                <TableCell>{tuple[0]}</TableCell>
-                <TableCell>{separator}</TableCell>
-                <TableCell>{tuple[1]}</TableCell>
+            {tuplesWithDeletes.map(({ tuple, onDelete }) => (
+              <TableRow key={tuple.join('')}>
+                {fields.map((field, index) => (
+                  <Fragment key={field}>
+                    <TableCell>{tuple[index]}</TableCell>
+                    {!isLastField(index) && <TableCell>{separator}</TableCell>}
+                  </Fragment>
+                ))}
                 <TableCell>
                   <IconButton edge="end" aria-label="delete" onClick={onDelete}>
                     <DeleteIcon />

@@ -19,6 +19,7 @@ const DEFAULT_HELPER_TEXT = ' ';
 
 export type FieldProps<TFieldName extends string> = FieldDeclaration<TFieldName> & {
   readonly isRequired: boolean;
+  readonly isDisabled: boolean;
   readonly hasBeenTouched: boolean;
   readonly error?: string;
   readonly value?: Value;
@@ -38,6 +39,7 @@ const Field = <TFieldName extends string>({
   onChangeField,
   onBlurField,
   isRequired,
+  isDisabled,
   ...field
 }: FieldProps<TFieldName>) => {
   const onChangeHandler = useCallback(
@@ -64,8 +66,8 @@ const Field = <TFieldName extends string>({
         <Select
           {...field}
           value={value as SingleValue | undefined}
-          options={field.options}
           isRequired={isRequired}
+          isDisabled={isDisabled}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}
           onChange={onChangeHandler}
@@ -78,6 +80,7 @@ const Field = <TFieldName extends string>({
           {...field}
           value={value as SingleValue | undefined}
           isRequired={isRequired}
+          isDisabled={isDisabled}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}
           onChange={onChangeHandler}
@@ -90,6 +93,7 @@ const Field = <TFieldName extends string>({
           {...field}
           value={value as ListValue | undefined}
           isRequired={isRequired}
+          isDisabled={isDisabled}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}
           onChange={onChangeHandler}
@@ -102,6 +106,7 @@ const Field = <TFieldName extends string>({
           {...field}
           value={value as TupleListValue | undefined}
           isRequired={isRequired}
+          isDisabled={isDisabled}
           helperText={adjustedHelperText.text}
           hasError={adjustedHelperText.isError}
           onChange={onChangeHandler}

@@ -6,7 +6,7 @@ export type TextProps = {
   readonly paragraph?: TypographyProps['paragraph'];
 };
 
-const Text: FC<TextProps> = ({ color, paragraph, children }) => (
+const Text: FC<TextProps> = ({ color, paragraph = true, children }) => (
   <Typography variant="body1" color={color} paragraph={paragraph}>
     {children}
   </Typography>

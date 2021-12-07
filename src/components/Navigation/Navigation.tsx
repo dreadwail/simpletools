@@ -17,7 +17,9 @@ const Navigation: FC = () => {
       {isNotRoot && (
         <Breadcrumbs aria-label="breadcrumb">
           <Link href={rootRoute.path}>{rootRoute.title}</Link>
-          <Text color="textSecondary">{currentRoute.title}</Text>
+          <Text color="textSecondary" paragraph={false}>
+            {currentRoute.title}
+          </Text>
         </Breadcrumbs>
       )}
       <Box my={1}>

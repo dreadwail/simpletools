@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 export type SingleValue = string;
 export type ListValue = string[];
-export type TupleValue = [string, string];
+export type TupleValue = string[];
 export type TupleListValue = TupleValue[];
 
 export type Value = SingleValue | ListValue | TupleListValue;
@@ -56,7 +56,7 @@ const cssJustifications: Record<Alignment, string> = {
   [Alignment.END]: 'flex-end',
 };
 
-export const getCssJustification = (alignment: Alignment = Alignment.CENTER): string =>
+export const getCssJustification = (alignment: Alignment = Alignment.START): string =>
   cssJustifications[alignment];
 
 export enum FieldType {
@@ -67,11 +67,11 @@ export enum FieldType {
 }
 
 type FieldDeclarationBase<TFieldName extends string, TValue extends Value> = {
-  readonly type: FieldType;
   readonly name: TFieldName;
   readonly label: string;
   readonly width?: Width;
   readonly isRequired?: boolean | ((values: Values<TFieldName>) => boolean);
+  readonly isDisabled?: boolean | ((values: Values<TFieldName>) => boolean);
   readonly helperText?: string;
   readonly initialValue?: TValue;
   readonly validate?: (
@@ -116,8 +116,7 @@ export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarat
   TupleListValue
 > & {
   readonly type: FieldType.TUPLE_LIST;
-  readonly fieldLabel1: string;
-  readonly fieldLabel2: string;
+  readonly fields: string[];
   readonly separator?: ReactNode;
 };
 

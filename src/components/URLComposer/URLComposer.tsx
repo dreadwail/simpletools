@@ -1,5 +1,9 @@
+import Box from '@material-ui/core/Box';
+import Paper from '@material-ui/core/Paper';
+import WebIcon from '@material-ui/icons/Language';
 import { FC, useCallback, useMemo, useState } from 'react';
 
+import Flex from '../Flex';
 import Form, {
   BlockDeclaration,
   FieldDeclaration,
@@ -9,7 +13,10 @@ import Form, {
   Errors,
   Width,
   Values,
+  Value,
 } from '../Form';
+import Heading from '../Heading';
+import Text from '../Text';
 
 /*
 generated url
@@ -26,7 +33,6 @@ WIP:
 
 form control for accumulating many values (query params)
 */
-
 const validSchemes: string[] = [
   'https://',
   'http://',
@@ -79,15 +85,20 @@ const portField: FieldDeclaration<URLFieldName> = {
   width: Width.QUARTER,
   isRequired: false,
   label: 'Port',
-  initialValue: '80',
+  initialValue: '443',
 };
 
 const pathField: FieldDeclaration<URLFieldName> = {
   type: FieldType.TEXT,
   name: 'path',
   width: Width.HALF,
-  isRequired: true,
   label: 'Path',
+  isDisabled: values => {
+    if (values.scheme && typeof values.scheme === 'string') {
+      return !values.scheme.endsWith('//');
+    }
+    return false;
+  },
 };
 
 const fragmentField: FieldDeclaration<URLFieldName> = {
@@ -104,9 +115,7 @@ const queryParamsField: FieldDeclaration<URLFieldName> = {
   width: Width.FULL,
   isRequired: false,
   label: 'Query Params',
-  fieldLabel1: 'Key',
-  fieldLabel2: 'Value',
-  separator: '=',
+  fields: ['Key', 'Value'],
 };
 
 const usernameField: FieldDeclaration<URLFieldName> = {
@@ -139,10 +148,10 @@ const fields: BlockDeclaration<URLFieldName> = {
           blocks: [schemeField, hostField, portField],
         },
         {
+          label: 'Resource',
           direction: Direction.HORIZONTAL,
           width: Width.HALF,
-          label: 'Credentials (Optional)',
-          blocks: [usernameField, passwordField],
+          blocks: [pathField, fragmentField],
         },
       ],
     },
@@ -151,15 +160,15 @@ const fields: BlockDeclaration<URLFieldName> = {
       width: Width.FULL,
       blocks: [
         {
-          label: 'Resource',
           direction: Direction.HORIZONTAL,
           width: Width.HALF,
-          blocks: [pathField, fragmentField],
+          label: 'Credentials (Optional)',
+          blocks: [usernameField, passwordField],
         },
         {
+          label: 'Query Params',
           direction: Direction.VERTICAL,
           width: Width.HALF,
-          label: 'Query Params',
           blocks: [queryParamsField],
         },
       ],
@@ -167,30 +176,97 @@ const fields: BlockDeclaration<URLFieldName> = {
   ],
 };
 
+const normalizePort = (scheme: Value | undefined, port: Value | undefined): Value | undefined => {
+  if (scheme === 'http://' && port === '80') {
+    return '';
+  }
+  if (scheme === 'https://' && port === '443') {
+    return '';
+  }
+  return port;
+};
+
+const normalizeFragment = (fragment: Value | undefined): Value | undefined => {
+  if (fragment && typeof fragment === 'string' && !fragment.startsWith('#')) {
+    return `#${fragment}`;
+  }
+  return fragment;
+};
+
+const buildQueryParams = (queryParams: Value | undefined): string => {
+  if (Array.isArray(queryParams) && queryParams.length > 0 && Array.isArray(queryParams[0])) {
+    const params = new URLSearchParams('');
+    queryParams.forEach(([key, value]) => {
+      params.append(key, value);
+    });
+    return `?${params.toString()}`;
+  }
+  return '';
+};
+
+const normalizeCredentials = (username: Value | undefined, password: Value | undefined): string => {
+  if (!username) {
+    return '';
+  }
+  return `${[username, password].filter(x => x).join(':')}@`;
+};
+
+const normalizePath = (path: Value | undefined): string => {
+  if (path && typeof path === 'string') {
+    if (!path.startsWith('/')) {
+      return `/${path}`;
+    }
+    return path;
+  }
+  return '';
+};
+
 const URLComposer: FC = () => {
   const [values, setValues] = useState<Values<URLFieldName>>({});
   const [errors, setErrors] = useState<Errors<URLFieldName>>({});
+  // const [isValid, setIsValid] = useState<boolean>(false);
 
   const onChange = useCallback<FormProps<URLFieldName>['onChange']>(payload => {
     setValues(payload.values);
     setErrors(payload.errors);
+    // setIsValid(payload.isValid);
   }, []);
 
   const url = useMemo(() => {
     const hasErrors = Object.values(errors).filter(val => val).length > 0;
     if (hasErrors) {
-      return 'Invalid';
+      return '';
     }
-    const { scheme, host, port, path /* , queryParams, fragment */, username, password } = values;
-    const credentials = [username, password].filter(val => val).join(':');
-    const authority = [host, port].filter(val => val).join(':');
-    return [scheme, credentials, authority, path].join('');
+    const { scheme, host, port, path, queryParams, fragment, username, password } = values;
+    const authority = [host, normalizePort(scheme, port)].filter(val => val).join(':');
+    const params = buildQueryParams(queryParams);
+
+    return [
+      scheme,
+      normalizeCredentials(username, password),
+      authority,
+      normalizePath(path),
+      params,
+      normalizeFragment(fragment),
+    ].join('');
   }, [values, errors]);
 
   return (
     <div>
+      <Box mx={2} mb={4}>
+        <Text>Use the fields below to construct a URL.</Text>
+        <Paper variant="outlined">
+          <Flex alignItems="center" p={1}>
+            <WebIcon fontSize="large" />
+            <Box ml={2}>
+              <Heading level={2} visualLevel={4}>
+                {url}
+              </Heading>
+            </Box>
+          </Flex>
+        </Paper>
+      </Box>
       <Form fields={fields} onChange={onChange} />
-      <pre>{JSON.stringify({ url }, null, 2)}</pre>
     </div>
   );
 };

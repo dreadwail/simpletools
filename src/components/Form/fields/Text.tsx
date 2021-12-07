@@ -1,16 +1,10 @@
 import InputAdornment from '@material-ui/core/InputAdornment';
-import MaterialTextField from '@material-ui/core/TextField';
+import MaterialTextField, {
+  TextFieldProps as MaterialTextFieldprops,
+} from '@material-ui/core/TextField';
 import debounce from 'lodash/debounce';
 import noop from 'lodash/noop';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  ChangeEvent,
-  KeyboardEvent,
-  RefObject,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState, ChangeEvent, KeyboardEvent, Ref } from 'react';
 
 import type { SingleValue, TextFieldDeclaration } from '../types';
 
@@ -22,25 +16,25 @@ export type KeyPress = {
   readonly code: TextKeyPressEvent['code'];
 };
 
-export type TextProps<TFieldName extends string> = Omit<
-  TextFieldDeclaration<TFieldName>,
-  'type' | 'name'
-> & {
-  readonly name?: string;
-  readonly isRequired: boolean;
-  readonly value?: SingleValue;
-  readonly hasError: boolean;
-  readonly onChange?: (value: SingleValue) => void;
-  readonly onBlur?: () => void;
-  readonly onKeyPress?: (keyPress: KeyPress) => void;
-  readonly inputRef?: RefObject<HTMLInputElement>;
-};
+export type TextProps<TFieldName extends string> = Pick<MaterialTextFieldprops, 'size'> &
+  Omit<TextFieldDeclaration<TFieldName>, 'type' | 'name' | 'isRequired' | 'isDisabled'> & {
+    readonly name?: string;
+    readonly isRequired?: boolean;
+    readonly isDisabled?: boolean;
+    readonly value?: SingleValue;
+    readonly hasError?: boolean;
+    readonly onChange?: (value: SingleValue) => void;
+    readonly onBlur?: () => void;
+    readonly onKeyPress?: (keyPress: KeyPress) => void;
+    readonly inputRef?: Ref<HTMLInputElement>;
+  };
 
 const DEBOUNCE_MILLIS = 200;
 
 const Text = <TFieldName extends string>({
   name,
   isRequired,
+  isDisabled,
   label,
   helperText,
   prefix,
@@ -52,6 +46,7 @@ const Text = <TFieldName extends string>({
   onBlur,
   onKeyPress,
   inputRef,
+  size = 'small',
 }: TextProps<TFieldName>) => {
   const [localValue, setLocalValue] = useState(value ?? initialValue ?? '');
   const [lastKeyPress, setLastKeyPress] = useState<KeyPress | null>(null);
@@ -96,7 +91,8 @@ const Text = <TFieldName extends string>({
     <MaterialTextField
       name={name}
       fullWidth
-      size="small"
+      size={size}
+      disabled={isDisabled}
       margin="none"
       variant="outlined"
       label={label}
@@ -104,6 +100,7 @@ const Text = <TFieldName extends string>({
       InputProps={{
         startAdornment: prefix ? <InputAdornment position="start">{prefix}</InputAdornment> : null,
         endAdornment: suffix ? <InputAdornment position="end">{suffix}</InputAdornment> : null,
+        style: { backgroundColor: isDisabled ? '#ddd' : '#fff' },
       }}
       value={localValue}
       error={hasError}

@@ -121,7 +121,10 @@
         2,
         {
           "SwitchCase": 1,
-          "ignoredNodes": ["TSTypeParameterInstantiation"]
+          "ignoredNodes": [
+            "TSTypeParameterInstantiation",
+            "TSIntersectionType"
+          ]
         }
       ],
       "@typescript-eslint/init-declarations": [

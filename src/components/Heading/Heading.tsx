@@ -17,14 +17,26 @@ export type HeadingProps = {
   readonly level: Level;
   readonly visualLevel?: Level;
   readonly color?: TypographyProps['color'];
+  readonly gutterBottom?: TypographyProps['gutterBottom'];
 };
 
-const Heading: FC<HeadingProps> = ({ level, visualLevel, color, children }) => {
+const Heading: FC<HeadingProps> = ({
+  level,
+  visualLevel,
+  color,
+  gutterBottom = false,
+  children,
+}) => {
   const levelElement = levelToElement[level];
   const visualLevelElement = visualLevel ? levelToElement[visualLevel] : levelElement;
 
   return (
-    <Typography component={levelElement} variant={visualLevelElement} color={color} gutterBottom>
+    <Typography
+      component={levelElement}
+      variant={visualLevelElement}
+      color={color}
+      gutterBottom={gutterBottom}
+    >
       {children}
     </Typography>
   );

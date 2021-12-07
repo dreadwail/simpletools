@@ -15,19 +15,21 @@ import Text, { KeyPress } from './Text';
 
 export type ListProps<TFieldName extends string> = Omit<
   ListFieldDeclaration<TFieldName>,
-  'type' | 'name'
+  'type' | 'name' | 'isRequired' | 'isDisabled'
 > & {
   readonly name?: string;
-  readonly isRequired: boolean;
+  readonly isRequired?: boolean;
+  readonly isDisabled?: boolean;
   readonly value?: ListValue;
-  readonly hasError: boolean;
-  readonly onChange: (value: ListValue) => void;
-  readonly onBlur: () => void;
+  readonly hasError?: boolean;
+  readonly onChange?: (value: ListValue) => void;
+  readonly onBlur?: () => void;
 };
 
 const List = <TFieldName extends string>({
   name,
   isRequired,
+  isDisabled,
   label,
   helperText,
   prefix,
@@ -42,7 +44,7 @@ const List = <TFieldName extends string>({
   const [list, setList] = useState<ListValue>(value ?? initialValue ?? []);
 
   useEffect(() => {
-    onChange(list);
+    onChange?.(list);
   }, [list, onChange]);
 
   const onChangeText = useCallback((newText: string) => {
@@ -86,6 +88,7 @@ const List = <TFieldName extends string>({
         <Text
           name={name}
           isRequired={isRequired}
+          isDisabled={isDisabled}
           label={label}
           helperText={helperText}
           prefix={prefix}

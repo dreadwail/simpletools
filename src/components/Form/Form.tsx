@@ -140,19 +140,16 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
   }, [fieldNames, fieldsByName, values]);
 
   return (
-    <>
-      <Flex width={getCssWidth(Width.FULL)} justifyContent={getCssJustification(block.alignment)}>
-        <FieldBlock
-          block={block}
-          values={values}
-          errors={errors}
-          touched={touched}
-          onChangeField={onChangeField}
-          onBlurField={onBlurField}
-        />
-      </Flex>
-      <pre>{JSON.stringify({ values, errors, touched, isValid }, null, 2)}</pre>
-    </>
+    <Flex width={getCssWidth(Width.FULL)} justifyContent={getCssJustification(block.alignment)}>
+      <FieldBlock
+        block={block}
+        values={values}
+        errors={errors}
+        touched={touched}
+        onChangeField={onChangeField}
+        onBlurField={onBlurField}
+      />
+    </Flex>
   );
 };
 

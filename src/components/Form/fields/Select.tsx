@@ -8,19 +8,21 @@ type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaEle
 
 export type SelectProps<TFieldName extends string> = Omit<
   SelectFieldDeclaration<TFieldName>,
-  'type' | 'name'
+  'type' | 'name' | 'isRequired' | 'isDisabled'
 > & {
   readonly name?: string;
-  readonly isRequired: boolean;
+  readonly isRequired?: boolean;
+  readonly isDisabled?: boolean;
   readonly value?: SingleValue;
-  readonly hasError: boolean;
-  readonly onChange: (value: SingleValue) => void;
-  readonly onBlur: () => void;
+  readonly hasError?: boolean;
+  readonly onChange?: (value: SingleValue) => void;
+  readonly onBlur?: () => void;
 };
 
 const Select = <TFieldName extends string>({
   name,
   isRequired,
+  isDisabled,
   label,
   helperText,
   initialValue,
@@ -34,7 +36,7 @@ const Select = <TFieldName extends string>({
     (event: TextFieldChangeEvent) => {
       // The event can be absent. See: https://v4.mui.com/api/input-base/#props
       if (event) {
-        onChange(event.target.value);
+        onChange?.(event.target.value);
       }
     },
     [onChange]
@@ -49,10 +51,14 @@ const Select = <TFieldName extends string>({
       margin="none"
       variant="outlined"
       label={label}
+      InputProps={{
+        style: { backgroundColor: isDisabled ? '#ddd' : '#fff' },
+      }}
       value={value ?? initialValue ?? ''}
       error={hasError}
       helperText={helperText}
       required={isRequired}
+      disabled={isDisabled}
       onChange={onChangeHandler}
       onBlur={onBlur}
     >

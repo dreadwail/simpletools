@@ -56,12 +56,15 @@ const FieldBlock = <TFieldName extends string>({
   if (isFieldDeclaration(block)) {
     const isRequired =
       typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
+    const isDisabled =
+      typeof block.isDisabled === 'boolean' ? block.isDisabled : !!block.isDisabled?.(values);
 
     return (
       <Wrapper>
         <Field
           {...block}
           isRequired={isRequired}
+          isDisabled={isDisabled}
           hasBeenTouched={!!touched[block.name]}
           error={errors[block.name]}
           value={values[block.name]}
