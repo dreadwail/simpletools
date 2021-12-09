@@ -8,7 +8,7 @@ type TextFieldChangeEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaEle
 
 export type SelectProps<TFieldName extends string> = Omit<
   SelectFieldDeclaration<TFieldName>,
-  'type' | 'name' | 'isRequired' | 'isDisabled'
+  'controlType' | 'name' | 'isRequired' | 'isDisabled'
 > & {
   readonly name?: string;
   readonly isRequired?: boolean;

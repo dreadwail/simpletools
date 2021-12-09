@@ -7,7 +7,7 @@ import {
   getCssWidth,
   getCssJustification,
   isBlockDeclaration,
-  FieldType,
+  ControlType,
   Errors,
   BlockDeclaration,
   FieldDeclaration,
@@ -103,9 +103,9 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
       const isRequired =
         typeof field.isRequired === 'boolean' ? field.isRequired : !!field.isRequired?.(values);
 
-      switch (field.type) {
-        case FieldType.TEXT:
-        case FieldType.SELECT:
+      switch (field.controlType) {
+        case ControlType.INPUT:
+        case ControlType.SELECT:
           const textValue = values[field.name] as SingleValue | undefined;
           if (!textValue) {
             if (isRequired) {
@@ -114,7 +114,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
             return memo;
           }
           return { ...memo, [fieldName]: field.validate?.(textValue, values) };
-        case FieldType.LIST:
+        case ControlType.LIST:
           const listValue = values[field.name] as ListValue | undefined;
           if (!listValue || listValue.length === 0) {
             if (isRequired) {
@@ -123,7 +123,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
             return memo;
           }
           return { ...memo, [fieldName]: field.validate?.(listValue, values) };
-        case FieldType.TUPLE_LIST:
+        case ControlType.TUPLE_LIST:
           const tupleListValue = values[field.name] as TupleListValue | undefined;
           if (!tupleListValue || tupleListValue.length === 0) {
             if (isRequired) {

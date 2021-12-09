@@ -6,18 +6,18 @@ import debounce from 'lodash/debounce';
 import noop from 'lodash/noop';
 import { useCallback, useEffect, useMemo, useState, ChangeEvent, KeyboardEvent, Ref } from 'react';
 
-import type { SingleValue, TextFieldDeclaration } from '../types';
+import type { SingleValue, InputFieldDeclaration } from '../types';
 
-type TextChangeEvent = ChangeEvent<HTMLInputElement>;
-type TextKeyPressEvent = KeyboardEvent<HTMLInputElement>;
+type InputChangeEvent = ChangeEvent<HTMLInputElement>;
+type InputKeyPressEvent = KeyboardEvent<HTMLInputElement>;
 
 export type KeyPress = {
-  readonly key: TextKeyPressEvent['key'];
-  readonly code: TextKeyPressEvent['code'];
+  readonly key: InputKeyPressEvent['key'];
+  readonly code: InputKeyPressEvent['code'];
 };
 
-export type TextProps<TFieldName extends string> = Pick<MaterialTextFieldprops, 'size'> &
-  Omit<TextFieldDeclaration<TFieldName>, 'type' | 'name' | 'isRequired' | 'isDisabled'> & {
+export type InputProps<TFieldName extends string> = Pick<MaterialTextFieldprops, 'size'> &
+  Omit<InputFieldDeclaration<TFieldName>, 'controlType' | 'name' | 'isRequired' | 'isDisabled'> & {
     readonly name?: string;
     readonly isRequired?: boolean;
     readonly isDisabled?: boolean;
@@ -27,11 +27,12 @@ export type TextProps<TFieldName extends string> = Pick<MaterialTextFieldprops, 
     readonly onBlur?: () => void;
     readonly onKeyPress?: (keyPress: KeyPress) => void;
     readonly inputRef?: Ref<HTMLInputElement>;
+    readonly fullWidth?: boolean;
   };
 
 const DEBOUNCE_MILLIS = 200;
 
-const Text = <TFieldName extends string>({
+const Input = <TFieldName extends string>({
   name,
   isRequired,
   isDisabled,
@@ -47,11 +48,12 @@ const Text = <TFieldName extends string>({
   onKeyPress,
   inputRef,
   size = 'small',
-}: TextProps<TFieldName>) => {
-  const [localValue, setLocalValue] = useState(value ?? initialValue ?? '');
+  fullWidth = true,
+}: InputProps<TFieldName>) => {
+  const [localValue, setLocalValue] = useState<unknown>(value ?? initialValue ?? '');
   const [lastKeyPress, setLastKeyPress] = useState<KeyPress | null>(null);
 
-  const onChangeLocal = useCallback((event: TextChangeEvent) => {
+  const onChangeLocal = useCallback((event: InputChangeEvent) => {
     // The event can be absent. See: https://v4.mui.com/api/input-base/#props
     if (event) {
       setLocalValue(event.target.value);
@@ -68,7 +70,7 @@ const Text = <TFieldName extends string>({
   }, [lastKeyPress, onKeyPress]);
 
   const onKeyPressWrapped = useCallback(
-    ({ key, code }: TextKeyPressEvent) => {
+    ({ key, code }: InputKeyPressEvent) => {
       if (key === 'Enter') {
         onChangeDebounced.flush();
       }
@@ -90,7 +92,7 @@ const Text = <TFieldName extends string>({
   return (
     <MaterialTextField
       name={name}
-      fullWidth
+      fullWidth={fullWidth}
       size={size}
       disabled={isDisabled}
       margin="none"
@@ -113,4 +115,4 @@ const Text = <TFieldName extends string>({
   );
 };
 
-export default Text;
+export default Input;

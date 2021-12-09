@@ -11,11 +11,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Flex from '../../Flex';
 import type { ListFieldDeclaration, ListValue } from '../types';
 
-import Text, { KeyPress } from './Text';
+import Input, { KeyPress } from './Input';
 
 export type ListProps<TFieldName extends string> = Omit<
   ListFieldDeclaration<TFieldName>,
-  'type' | 'name' | 'isRequired' | 'isDisabled'
+  'controlType' | 'name' | 'isRequired' | 'isDisabled'
 > & {
   readonly name?: string;
   readonly isRequired?: boolean;
@@ -85,7 +85,7 @@ const List = <TFieldName extends string>({
   return (
     <Flex flexDirection="column" width="100%">
       <Flex flexDirection="row" alignItems="flex-start">
-        <Text
+        <Input
           name={name}
           isRequired={isRequired}
           isDisabled={isDisabled}

@@ -12,7 +12,7 @@ import Flex from '../Flex';
 import Form, {
   BlockDeclaration,
   FieldDeclaration,
-  FieldType,
+  ControlType,
   FormProps,
   Direction,
   Width,
@@ -23,9 +23,6 @@ import Heading from '../Heading';
 import Link, { LinkProps } from '../Link';
 import Text from '../Text';
 
-/*
-copy button for generated url
-*/
 const validSchemes: string[] = [
   'https://',
   'http://',
@@ -50,7 +47,7 @@ type URLFieldName =
   | 'password';
 
 const schemeField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.SELECT,
+  controlType: ControlType.SELECT,
   name: 'scheme',
   width: Width.QUARTER,
   isRequired: true,
@@ -65,7 +62,7 @@ const schemeField: FieldDeclaration<URLFieldName> = {
 };
 
 const hostField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TEXT,
+  controlType: ControlType.INPUT,
   name: 'host',
   width: Width.HALF,
   isRequired: true,
@@ -73,7 +70,7 @@ const hostField: FieldDeclaration<URLFieldName> = {
 };
 
 const portField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TEXT,
+  controlType: ControlType.INPUT,
   name: 'port',
   width: Width.QUARTER,
   isRequired: false,
@@ -82,7 +79,7 @@ const portField: FieldDeclaration<URLFieldName> = {
 };
 
 const pathField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TEXT,
+  controlType: ControlType.INPUT,
   name: 'path',
   width: Width.HALF,
   label: 'Path',
@@ -95,7 +92,7 @@ const pathField: FieldDeclaration<URLFieldName> = {
 };
 
 const fragmentField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TEXT,
+  controlType: ControlType.INPUT,
   name: 'fragment',
   width: Width.HALF,
   isRequired: false,
@@ -103,7 +100,7 @@ const fragmentField: FieldDeclaration<URLFieldName> = {
 };
 
 const queryParamsField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TUPLE_LIST,
+  controlType: ControlType.TUPLE_LIST,
   name: 'queryParams',
   width: Width.FULL,
   isRequired: false,
@@ -112,7 +109,7 @@ const queryParamsField: FieldDeclaration<URLFieldName> = {
 };
 
 const usernameField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TEXT,
+  controlType: ControlType.INPUT,
   name: 'username',
   width: Width.HALF,
   isRequired: values => values.scheme === 'mailto:',
@@ -120,7 +117,7 @@ const usernameField: FieldDeclaration<URLFieldName> = {
 };
 
 const passwordField: FieldDeclaration<URLFieldName> = {
-  type: FieldType.TEXT,
+  controlType: ControlType.INPUT,
   name: 'password',
   width: Width.HALF,
   isRequired: false,

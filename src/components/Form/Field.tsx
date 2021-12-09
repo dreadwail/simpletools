@@ -1,11 +1,11 @@
 import { useCallback, useMemo } from 'react';
 
+import Input from './fields/Input';
 import List from './fields/List';
 import Select from './fields/Select';
-import Text from './fields/Text';
 import TupleList from './fields/TupleList';
 import {
-  FieldType,
+  ControlType,
   FieldDeclaration,
   OnBlurHandler,
   OnChangeHandler,
@@ -66,8 +66,8 @@ const Field = <TFieldName extends string>({
     return { text: DEFAULT_HELPER_TEXT, isError: false };
   }, [error, field.helperText, hasBeenTouched, isRequired]);
 
-  switch (field.type) {
-    case FieldType.SELECT:
+  switch (field.controlType) {
+    case ControlType.SELECT:
       return (
         <Select
           {...field}
@@ -80,9 +80,9 @@ const Field = <TFieldName extends string>({
           onBlur={onBlurHandler}
         />
       );
-    case FieldType.TEXT:
+    case ControlType.INPUT:
       return (
-        <Text
+        <Input
           {...field}
           value={value as SingleValue | undefined}
           isRequired={isRequired}
@@ -93,7 +93,7 @@ const Field = <TFieldName extends string>({
           onBlur={onBlurHandler}
         />
       );
-    case FieldType.LIST:
+    case ControlType.LIST:
       return (
         <List
           {...field}
@@ -106,7 +106,7 @@ const Field = <TFieldName extends string>({
           onBlur={onBlurHandler}
         />
       );
-    case FieldType.TUPLE_LIST:
+    case ControlType.TUPLE_LIST:
       return (
         <TupleList
           {...field}

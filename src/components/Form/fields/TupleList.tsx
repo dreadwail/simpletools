@@ -13,11 +13,11 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import Flex from '../../Flex';
 import type { TupleListFieldDeclaration, TupleListValue, TupleValue } from '../types';
 
-import Text, { KeyPress } from './Text';
+import Input, { KeyPress } from './Input';
 
 export type TupleListProps<TFieldName extends string> = Omit<
   TupleListFieldDeclaration<TFieldName>,
-  'type' | 'name' | 'isRequired' | 'isDisabled'
+  'controlType' | 'name' | 'isRequired' | 'isDisabled'
 > & {
   readonly name?: string;
   readonly isRequired?: boolean;
@@ -42,7 +42,6 @@ const TupleList = <TFieldName extends string>({
   onBlur,
 }: TupleListProps<TFieldName>) => {
   const initialTupleToAdd = useMemo(() => Array<string>(fields.length).fill(''), [fields]);
-
   const initialTouched = useMemo(() => Array<boolean>(fields.length).fill(false), [fields]);
 
   const [tupleToAdd, setTupleToAdd] = useState<TupleValue>(initialTupleToAdd);
@@ -53,20 +52,20 @@ const TupleList = <TFieldName extends string>({
     onChange?.(tupleList);
   }, [tupleList, onChange]);
 
-  const onChangeText = useCallback((index: number, newText: string) => {
+  const onChangeTuple = useCallback((index: number, newValue: string) => {
     setTupleToAdd(oldTupleToAdd => {
       const newTupleToAdd = [...oldTupleToAdd];
-      newTupleToAdd[index] = newText;
+      newTupleToAdd[index] = newValue;
       return newTupleToAdd;
     });
   }, []);
 
-  const onChangeTexts = useMemo(
-    () => fields.map((_, index) => (newText: string) => onChangeText(index, newText)),
-    [fields, onChangeText]
+  const onChangeTuples = useMemo(
+    () => fields.map((_, index) => (newValue: string) => onChangeTuple(index, newValue)),
+    [fields, onChangeTuple]
   );
 
-  const onBlurText = useCallback((index: number) => {
+  const onBlurTuple = useCallback((index: number) => {
     setTouched(oldTouched => {
       const newTouched = [...oldTouched];
       newTouched[index] = true;
@@ -74,9 +73,9 @@ const TupleList = <TFieldName extends string>({
     });
   }, []);
 
-  const onBlurTexts = useMemo(
-    () => fields.map((_, index) => () => onBlurText(index)),
-    [fields, onBlurText]
+  const onBlurTuples = useMemo(
+    () => fields.map((_, index) => () => onBlurTuple(index)),
+    [fields, onBlurTuple]
   );
 
   useEffect(() => {
@@ -146,7 +145,7 @@ const TupleList = <TFieldName extends string>({
       <Flex flexDirection="row" alignItems="flex-start">
         {fields.map((field, index) => (
           <Fragment key={field}>
-            <Text
+            <Input
               isRequired={isRequired && isLastField(index)}
               isDisabled={isDisabled}
               label={`${label} - ${field}`}
@@ -156,8 +155,8 @@ const TupleList = <TFieldName extends string>({
               }}
               hasError={hasError}
               value={tupleToAdd[index]}
-              onBlur={onBlurTexts[index]}
-              onChange={onChangeTexts[index]}
+              onBlur={onBlurTuples[index]}
+              onChange={onChangeTuples[index]}
               onKeyPress={onKeyPresses[index]}
             />
             {!isLastField(index) && (

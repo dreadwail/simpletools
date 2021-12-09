@@ -59,8 +59,8 @@ const cssJustifications: Record<Alignment, string> = {
 export const getCssJustification = (alignment: Alignment = Alignment.START): string =>
   cssJustifications[alignment];
 
-export enum FieldType {
-  TEXT,
+export enum ControlType {
+  INPUT,
   SELECT,
   LIST,
   TUPLE_LIST,
@@ -80,11 +80,11 @@ type FieldDeclarationBase<TFieldName extends string, TValue extends Value> = {
   ) => string | null | undefined | void;
 };
 
-export type TextFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
+export type InputFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
   TFieldName,
   SingleValue
 > & {
-  readonly type: FieldType.TEXT;
+  readonly controlType: ControlType.INPUT;
   readonly prefix?: ReactNode;
   readonly suffix?: ReactNode;
 };
@@ -98,7 +98,7 @@ export type SelectFieldDeclaration<TFieldName extends string> = FieldDeclaration
   TFieldName,
   SingleValue
 > & {
-  readonly type: FieldType.SELECT;
+  readonly controlType: ControlType.SELECT;
   readonly options: SelectOption[];
 };
 
@@ -106,7 +106,7 @@ export type ListFieldDeclaration<TFieldName extends string> = FieldDeclarationBa
   TFieldName,
   ListValue
 > & {
-  readonly type: FieldType.LIST;
+  readonly controlType: ControlType.LIST;
   readonly prefix?: ReactNode;
   readonly suffix?: ReactNode;
 };
@@ -115,13 +115,13 @@ export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarat
   TFieldName,
   TupleListValue
 > & {
-  readonly type: FieldType.TUPLE_LIST;
+  readonly controlType: ControlType.TUPLE_LIST;
   readonly fields: string[];
   readonly separator?: ReactNode;
 };
 
 export type FieldDeclaration<TFieldName extends string> =
-  | TextFieldDeclaration<TFieldName>
+  | InputFieldDeclaration<TFieldName>
   | SelectFieldDeclaration<TFieldName>
   | ListFieldDeclaration<TFieldName>
   | TupleListFieldDeclaration<TFieldName>;
