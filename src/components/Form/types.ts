@@ -15,15 +15,6 @@ export enum Direction {
   HORIZONTAL = 'horizontal',
   VERTICAL = 'vertical',
 }
-
-const cssDirections: Record<Direction, string> = {
-  [Direction.HORIZONTAL]: 'row',
-  [Direction.VERTICAL]: 'column',
-};
-
-export const getCssDirection = (direction: Direction = Direction.VERTICAL): string =>
-  cssDirections[direction];
-
 export enum Width {
   THIRD = 'third',
   QUARTER = 'quarter',
@@ -33,31 +24,11 @@ export enum Width {
   FULL = 'full',
 }
 
-const cssWidths: Record<Width, string> = {
-  [Width.QUARTER]: '25%',
-  [Width.THIRD]: '33.33%',
-  [Width.HALF]: '50%',
-  [Width.TWO_THIRDS]: '66.66%',
-  [Width.THREE_QUARTERS]: '75%',
-  [Width.FULL]: '100%',
-};
-
-export const getCssWidth = (width: Width = Width.FULL): string => cssWidths[width];
-
 export enum Alignment {
   START = 'start',
   CENTER = 'center',
   END = 'end',
 }
-
-const cssJustifications: Record<Alignment, string> = {
-  [Alignment.START]: 'flex-start',
-  [Alignment.CENTER]: 'center',
-  [Alignment.END]: 'flex-end',
-};
-
-export const getCssJustification = (alignment: Alignment = Alignment.START): string =>
-  cssJustifications[alignment];
 
 export enum ControlType {
   INPUT,

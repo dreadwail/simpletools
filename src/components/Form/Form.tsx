@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import Flex from '../Flex';
-
 import FieldBlock from './FieldBlock';
 import {
-  getCssWidth,
-  getCssJustification,
   isBlockDeclaration,
   ControlType,
   Errors,
@@ -13,7 +9,6 @@ import {
   FieldDeclaration,
   OnBlurHandler,
   OnChangeHandler,
-  Width,
   Touched,
   Values,
   SingleValue,
@@ -140,16 +135,14 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
   }, [fieldNames, fieldsByName, values]);
 
   return (
-    <Flex width={getCssWidth(Width.FULL)} justifyContent={getCssJustification(block.alignment)}>
-      <FieldBlock
-        block={block}
-        values={values}
-        errors={errors}
-        touched={touched}
-        onChangeField={onChangeField}
-        onBlurField={onBlurField}
-      />
-    </Flex>
+    <FieldBlock
+      block={block}
+      values={values}
+      errors={errors}
+      touched={touched}
+      onChangeField={onChangeField}
+      onBlurField={onBlurField}
+    />
   );
 };
 

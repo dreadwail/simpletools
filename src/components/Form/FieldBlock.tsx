@@ -1,14 +1,10 @@
 import Box from '@material-ui/core/Box';
-import { FC, useMemo } from 'react';
-
-import Flex from '../Flex';
+import Grid, { GridDirection, GridJustification, GridSize } from '@material-ui/core/Grid';
+import type { FC } from 'react';
 
 import Field from './Field';
 import FieldSet from './FieldSet';
 import {
-  getCssDirection,
-  getCssJustification,
-  getCssWidth,
   Errors,
   FieldDeclaration,
   BlockDeclaration,
@@ -17,6 +13,8 @@ import {
   Touched,
   Width,
   Values,
+  Direction,
+  Alignment,
 } from './types';
 
 type FieldBlockProps<TFieldName extends string> = {
@@ -32,6 +30,78 @@ const isFieldDeclaration = <TFieldName extends string>(
   block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
 ): block is FieldDeclaration<TFieldName> => !!(block as FieldDeclaration<TFieldName>).name;
 
+const cssJustifications: Record<Alignment, GridJustification> = {
+  [Alignment.START]: 'flex-start',
+  [Alignment.CENTER]: 'center',
+  [Alignment.END]: 'flex-end',
+};
+
+const getCssJustification = (alignment: Alignment = Alignment.START): GridJustification =>
+  cssJustifications[alignment] ?? 'flex-start';
+
+const GRID_MAX: GridSize = 12;
+
+type GridSizes = {
+  readonly xs: GridSize;
+  readonly sm?: GridSize;
+  readonly md?: GridSize;
+  readonly lg?: GridSize;
+  readonly xl?: GridSize;
+};
+
+const gridWidthSizes: Record<Width, GridSizes> = {
+  [Width.QUARTER]: { xs: GRID_MAX, sm: GRID_MAX, md: 3 },
+  [Width.THIRD]: { xs: GRID_MAX, sm: GRID_MAX, md: 4 },
+  [Width.HALF]: { xs: GRID_MAX, sm: GRID_MAX, md: 6 },
+  [Width.TWO_THIRDS]: { xs: GRID_MAX, sm: GRID_MAX, md: 8 },
+  [Width.THREE_QUARTERS]: { xs: GRID_MAX, sm: GRID_MAX, md: 9 },
+  [Width.FULL]: { xs: GRID_MAX },
+};
+
+const getGridSizes = (width: Width = Width.FULL): GridSizes =>
+  gridWidthSizes[width] ?? gridWidthSizes[Width.FULL];
+
+const cssDirections: Record<Direction, GridDirection> = {
+  [Direction.HORIZONTAL]: 'row',
+  [Direction.VERTICAL]: 'column',
+};
+
+const getCssDirection = (direction: Direction = Direction.VERTICAL): GridDirection =>
+  cssDirections[direction] ?? 'row';
+
+type GridBlockProps = {
+  readonly isContainer: boolean;
+  readonly width?: Width;
+  readonly alignment?: Alignment;
+  readonly direction?: Direction;
+};
+
+const GridBlock: FC<GridBlockProps> = ({
+  isContainer,
+  width = Width.FULL,
+  alignment = Alignment.START,
+  direction = Direction.HORIZONTAL,
+  children,
+}) => {
+  const gridSizes = getGridSizes(width);
+  return (
+    <Grid
+      container={isContainer}
+      item
+      alignItems="flex-start"
+      justifyContent={getCssJustification(alignment)}
+      direction={getCssDirection(direction)}
+      xs={gridSizes.xs}
+      sm={gridSizes.sm}
+      md={gridSizes.md}
+      lg={gridSizes.lg}
+      xl={gridSizes.xl}
+    >
+      {children}
+    </Grid>
+  );
+};
+
 const GAP = 0.5;
 
 const FieldBlock = <TFieldName extends string>({
@@ -42,17 +112,6 @@ const FieldBlock = <TFieldName extends string>({
   onChangeField,
   onBlurField,
 }: FieldBlockProps<TFieldName>) => {
-  const Wrapper: FC = useMemo(
-    () =>
-      ({ children }) =>
-        (
-          <Flex alignItems="flex-start" width={getCssWidth(block.width)} p={GAP}>
-            {children}
-          </Flex>
-        ),
-    [block.width]
-  );
-
   if (isFieldDeclaration(block)) {
     const isRequired =
       typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
@@ -60,27 +119,29 @@ const FieldBlock = <TFieldName extends string>({
       typeof block.isDisabled === 'boolean' ? block.isDisabled : !!block.isDisabled?.(values);
 
     return (
-      <Wrapper>
-        <Field
-          {...block}
-          isRequired={isRequired}
-          isDisabled={isDisabled}
-          hasBeenTouched={!!touched[block.name]}
-          error={errors[block.name]}
-          value={values[block.name]}
-          onChangeField={onChangeField}
-          onBlurField={onBlurField}
-        />
-      </Wrapper>
+      <GridBlock isContainer={false} width={block.width}>
+        <Box p={GAP}>
+          <Field
+            {...block}
+            isRequired={isRequired}
+            isDisabled={isDisabled}
+            hasBeenTouched={!!touched[block.name]}
+            error={errors[block.name]}
+            value={values[block.name]}
+            onChangeField={onChangeField}
+            onBlurField={onBlurField}
+          />
+        </Box>
+      </GridBlock>
     );
   }
 
   const subBlocks = (
-    <Flex
-      flexDirection={getCssDirection(block.direction)}
-      flexWrap="wrap"
-      justifyContent={getCssJustification(block.alignment)}
-      width={getCssWidth(Width.FULL)}
+    <GridBlock
+      isContainer
+      width={Width.FULL}
+      alignment={block.alignment}
+      direction={block.direction}
     >
       {block.blocks.map((subBlock, index) => (
         <FieldBlock
@@ -93,20 +154,34 @@ const FieldBlock = <TFieldName extends string>({
           onBlurField={onBlurField}
         />
       ))}
-    </Flex>
+    </GridBlock>
   );
 
   if (block.label) {
     return (
-      <Wrapper>
+      <GridBlock
+        isContainer
+        width={block.width}
+        alignment={block.alignment}
+        direction={block.direction}
+      >
         <Box width="100%">
           <FieldSet label={block.label}>{subBlocks}</FieldSet>
         </Box>
-      </Wrapper>
+      </GridBlock>
     );
   }
 
-  return <Wrapper>{subBlocks}</Wrapper>;
+  return (
+    <GridBlock
+      isContainer
+      width={block.width}
+      alignment={block.alignment}
+      direction={block.direction}
+    >
+      {subBlocks}
+    </GridBlock>
+  );
 };
 
 export default FieldBlock;

@@ -193,7 +193,7 @@ const normalizePath = (path: Value | undefined): string => {
   return '';
 };
 
-const additionalResources: LinkProps[] = [
+const resources: LinkProps[] = [
   { children: 'MDN: URL', href: 'https://developer.mozilla.org/en-US/docs/Web/API/URL' },
   { children: 'Wikipedia: URL', href: 'https://en.wikipedia.org/wiki/URL' },
   { children: 'WHATWG: URL Living Standard', href: 'https://url.spec.whatwg.org/#urls' },
@@ -245,10 +245,10 @@ const URLComposer: FC = () => {
         <Form fields={fields} onChange={onChange} />
         <Box p={4} flexBasis="50%">
           <Heading level={3} visualLevel={6}>
-            Additional Resources:
+            Resources:
           </Heading>
           <List dense>
-            {additionalResources.map(({ href, children }) => (
+            {resources.map(({ href, children }) => (
               <ListItem key={href}>
                 <ListItemIcon>
                   <LinkIcon />
