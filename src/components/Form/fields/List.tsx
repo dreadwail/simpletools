@@ -8,7 +8,6 @@ import AddIcon from '@material-ui/icons/AddCircleOutline';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import Flex from '../../Flex';
 import type { ListFieldDeclaration, ListValue } from '../types';
 
 import Input, { KeyPress } from './Input';
@@ -83,8 +82,8 @@ const List = <TFieldName extends string>({
   );
 
   return (
-    <Flex flexDirection="column" width="100%">
-      <Flex flexDirection="row" alignItems="flex-start">
+    <Box display="flex" flexDirection="column" width="100%">
+      <Box display="flex" flexDirection="row" alignItems="flex-start">
         <Input
           name={name}
           isRequired={isRequired}
@@ -104,7 +103,7 @@ const List = <TFieldName extends string>({
             <AddIcon />
           </IconButton>
         </Box>
-      </Flex>
+      </Box>
       <MaterialList dense>
         {listWithDeletes.map(({ entry, onDelete }) => (
           <ListItem key={entry} divider>
@@ -117,7 +116,7 @@ const List = <TFieldName extends string>({
           </ListItem>
         ))}
       </MaterialList>
-    </Flex>
+    </Box>
   );
 };
 

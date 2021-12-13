@@ -1,4 +1,5 @@
 import Box from '@material-ui/core/Box';
+import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -10,7 +11,7 @@ import AddIcon from '@material-ui/icons/AddCircleOutline';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import Flex from '../../Flex';
+import FieldSet from '../FieldSet';
 import type { TupleListFieldDeclaration, TupleListValue, TupleValue } from '../types';
 
 import Input, { KeyPress } from './Input';
@@ -41,8 +42,15 @@ const TupleList = <TFieldName extends string>({
   onChange,
   onBlur,
 }: TupleListProps<TFieldName>) => {
-  const initialTupleToAdd = useMemo(() => Array<string>(fields.length).fill(''), [fields]);
-  const initialTouched = useMemo(() => Array<boolean>(fields.length).fill(false), [fields]);
+  const normalizedFields = useMemo(() => fields ?? [label], [label, fields]);
+  const initialTupleToAdd = useMemo(
+    () => Array<string>(normalizedFields.length).fill(''),
+    [normalizedFields]
+  );
+  const initialTouched = useMemo(
+    () => Array<boolean>(normalizedFields.length).fill(false),
+    [normalizedFields]
+  );
 
   const [tupleToAdd, setTupleToAdd] = useState<TupleValue>(initialTupleToAdd);
   const [tupleList, setTupleList] = useState<TupleListValue>(value ?? initialValue ?? []);
@@ -61,8 +69,8 @@ const TupleList = <TFieldName extends string>({
   }, []);
 
   const onChangeTuples = useMemo(
-    () => fields.map((_, index) => (newValue: string) => onChangeTuple(index, newValue)),
-    [fields, onChangeTuple]
+    () => normalizedFields.map((_, index) => (newValue: string) => onChangeTuple(index, newValue)),
+    [normalizedFields, onChangeTuple]
   );
 
   const onBlurTuple = useCallback((index: number) => {
@@ -74,8 +82,8 @@ const TupleList = <TFieldName extends string>({
   }, []);
 
   const onBlurTuples = useMemo(
-    () => fields.map((_, index) => () => onBlurTuple(index)),
-    [fields, onBlurTuple]
+    () => normalizedFields.map((_, index) => () => onBlurTuple(index)),
+    [normalizedFields, onBlurTuple]
   );
 
   useEffect(() => {
@@ -83,21 +91,21 @@ const TupleList = <TFieldName extends string>({
     if (allTouched) {
       onBlur?.();
     }
-  }, [fields, onBlur, touched]);
+  }, [normalizedFields, onBlur, touched]);
 
   const onClickAdd = useCallback(() => {
     setTupleList((oldTupleList: TupleListValue): TupleListValue => [...oldTupleList, tupleToAdd]);
     setTupleToAdd(initialTupleToAdd);
   }, [initialTupleToAdd, tupleToAdd]);
 
-  const inputsRef = useRef<HTMLInputElement[]>(Array(fields.length).fill(null));
+  const inputsRef = useRef<HTMLInputElement[]>(Array(normalizedFields.length).fill(null));
 
   const allFieldsHaveValue = useMemo(() => tupleToAdd.every(field => field), [tupleToAdd]);
 
   const onKeyPress = useCallback(
     (index: number, keyPress: KeyPress) => {
       if (keyPress.key === 'Enter') {
-        const isLastField = index === fields.length - 1;
+        const isLastField = index === normalizedFields.length - 1;
         if (isLastField) {
           const fieldHasValue = tupleToAdd[index];
           if (allFieldsHaveValue) {
@@ -112,12 +120,12 @@ const TupleList = <TFieldName extends string>({
         }
       }
     },
-    [allFieldsHaveValue, fields.length, onClickAdd, tupleToAdd]
+    [allFieldsHaveValue, normalizedFields.length, onClickAdd, tupleToAdd]
   );
 
   const onKeyPresses = useMemo(
-    () => fields.map((_, index) => (keyPress: KeyPress) => onKeyPress(index, keyPress)),
-    [fields, onKeyPress]
+    () => normalizedFields.map((_, index) => (keyPress: KeyPress) => onKeyPress(index, keyPress)),
+    [normalizedFields, onKeyPress]
   );
 
   const onClickDelete = useCallback((index: number) => {
@@ -137,79 +145,94 @@ const TupleList = <TFieldName extends string>({
     [tupleList, onClickDelete]
   );
 
-  const isFirstField = useCallback((index: number) => index === 0, []);
-  const isLastField = useCallback((index: number) => index === fields.length - 1, [fields.length]);
+  const isLastField = useCallback(
+    (index: number) => index === normalizedFields.length - 1,
+    [normalizedFields.length]
+  );
 
   return (
-    <Flex flexDirection="column" width="100%">
-      <Flex flexDirection="row" alignItems="flex-start">
-        {fields.map((field, index) => (
-          <Fragment key={field}>
-            <Input
-              isRequired={isRequired && isLastField(index)}
-              isDisabled={isDisabled}
-              label={`${label} - ${field}`}
-              helperText={isFirstField(index) ? helperText : ''}
-              inputRef={(element: HTMLInputElement) => {
-                inputsRef.current[index] = element;
-              }}
-              hasError={hasError}
-              value={tupleToAdd[index]}
-              onBlur={onBlurTuples[index]}
-              onChange={onChangeTuples[index]}
-              onKeyPress={onKeyPresses[index]}
-            />
-            {!isLastField(index) && (
-              <Box my={1} mx={0.5}>
-                {separator}
-              </Box>
-            )}
-          </Fragment>
-        ))}
-        <Box my={1}>
-          <IconButton
-            aria-label="add"
-            size="small"
-            onClick={onClickAdd}
-            disabled={!allFieldsHaveValue}
-          >
-            <AddIcon />
-          </IconButton>
-        </Box>
-      </Flex>
-      <TableContainer>
-        <Table size="small" aria-label={label}>
-          <TableHead>
-            <TableRow>
-              {fields.map((field, index) => (
-                <Fragment key={field}>
-                  <TableCell>{field}</TableCell>
-                  {!isLastField(index) && <TableCell />}
-                </Fragment>
-              ))}
-              <TableCell aria-label="delete" />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {tuplesWithDeletes.map(({ tuple, onDelete }) => (
-              <TableRow key={tuple.join('')}>
-                {fields.map((field, index) => (
-                  <Fragment key={field}>
-                    <TableCell>{tuple[index]}</TableCell>
-                    {!isLastField(index) && <TableCell>{separator}</TableCell>}
-                  </Fragment>
-                ))}
-                <TableCell>
-                  <IconButton edge="end" aria-label="delete" onClick={onDelete}>
-                    <DeleteIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
+    <Box display="flex" flexDirection="column" width="100%">
+      <FieldSet label={label} helperText={helperText}>
+        <Grid container alignItems="center">
+          <Grid container item xs>
+            {normalizedFields.map((field, index) => (
+              <Fragment key={field}>
+                <Grid item xs={12} sm>
+                  <Box pr={0.5} pb={0.5}>
+                    <Input
+                      isRequired={isRequired && isLastField(index)}
+                      isDisabled={isDisabled}
+                      label={field}
+                      inputRef={(element: HTMLInputElement) => {
+                        inputsRef.current[index] = element;
+                      }}
+                      hasError={hasError}
+                      value={tupleToAdd[index]}
+                      onBlur={onBlurTuples[index]}
+                      onChange={onChangeTuples[index]}
+                      onKeyPress={onKeyPresses[index]}
+                    />
+                  </Box>
+                </Grid>
+                {!isLastField(index) && separator && (
+                  <Grid item>
+                    <Box my={1} mx={0.5}>
+                      {separator}
+                    </Box>
+                  </Grid>
+                )}
+              </Fragment>
             ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Flex>
+          </Grid>
+          <Grid item>
+            <IconButton
+              aria-label="add"
+              size="small"
+              onClick={onClickAdd}
+              disabled={!allFieldsHaveValue}
+            >
+              <AddIcon />
+            </IconButton>
+          </Grid>
+        </Grid>
+      </FieldSet>
+      {tuplesWithDeletes.length > 0 && (
+        <Box mb={2}>
+          <TableContainer>
+            <Table size="small" padding="none" aria-label={label}>
+              <TableHead>
+                <TableRow>
+                  {normalizedFields.map((field, index) => (
+                    <Fragment key={field}>
+                      <TableCell>{field}</TableCell>
+                      {!isLastField(index) && <TableCell />}
+                    </Fragment>
+                  ))}
+                  <TableCell aria-label="delete" />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {tuplesWithDeletes.map(({ tuple, onDelete }) => (
+                  <TableRow key={tuple.join('')}>
+                    {normalizedFields.map((field, index) => (
+                      <Fragment key={field}>
+                        <TableCell>{tuple[index]}</TableCell>
+                        {!isLastField(index) && <TableCell>{separator}</TableCell>}
+                      </Fragment>
+                    ))}
+                    <TableCell align="right">
+                      <IconButton aria-label="delete" onClick={onDelete}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Box>
+      )}
+    </Box>
   );
 };
 

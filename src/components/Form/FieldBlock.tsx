@@ -50,11 +50,11 @@ type GridSizes = {
 };
 
 const gridWidthSizes: Record<Width, GridSizes> = {
-  [Width.QUARTER]: { xs: GRID_MAX, sm: GRID_MAX, md: 3 },
-  [Width.THIRD]: { xs: GRID_MAX, sm: GRID_MAX, md: 4 },
-  [Width.HALF]: { xs: GRID_MAX, sm: GRID_MAX, md: 6 },
-  [Width.TWO_THIRDS]: { xs: GRID_MAX, sm: GRID_MAX, md: 8 },
-  [Width.THREE_QUARTERS]: { xs: GRID_MAX, sm: GRID_MAX, md: 9 },
+  [Width.QUARTER]: { xs: GRID_MAX, sm: 3 },
+  [Width.THIRD]: { xs: GRID_MAX, sm: 4 },
+  [Width.HALF]: { xs: GRID_MAX, sm: 6 },
+  [Width.TWO_THIRDS]: { xs: GRID_MAX, sm: 8 },
+  [Width.THREE_QUARTERS]: { xs: GRID_MAX, sm: 9 },
   [Width.FULL]: { xs: GRID_MAX },
 };
 
@@ -84,13 +84,17 @@ const GridBlock: FC<GridBlockProps> = ({
   children,
 }) => {
   const gridSizes = getGridSizes(width);
+  const alignItems = isContainer ? 'flex-start' : undefined;
+  const flexDirection = isContainer ? getCssDirection(direction) : undefined;
+  const justifyContent = isContainer ? getCssJustification(alignment) : undefined;
+
   return (
     <Grid
       container={isContainer}
       item
-      alignItems="flex-start"
-      justifyContent={getCssJustification(alignment)}
-      direction={getCssDirection(direction)}
+      alignItems={alignItems}
+      justifyContent={justifyContent}
+      direction={flexDirection}
       xs={gridSizes.xs}
       sm={gridSizes.sm}
       md={gridSizes.md}
@@ -120,7 +124,7 @@ const FieldBlock = <TFieldName extends string>({
 
     return (
       <GridBlock isContainer={false} width={block.width}>
-        <Box p={GAP}>
+        <Box pr={GAP}>
           <Field
             {...block}
             isRequired={isRequired}

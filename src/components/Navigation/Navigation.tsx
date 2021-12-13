@@ -13,7 +13,7 @@ const Navigation: FC = () => {
   const isNotRoot = currentRoute.path !== rootRoute.path;
 
   return (
-    <Box mb={3}>
+    <Box my={2}>
       {isNotRoot && (
         <Breadcrumbs aria-label="breadcrumb">
           <Link href={rootRoute.path}>{rootRoute.title}</Link>

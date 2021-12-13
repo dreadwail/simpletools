@@ -12,7 +12,7 @@ const Layout: FC<LayoutProps> = ({ header, navigation, children }) => (
   <Container maxWidth="lg">
     <Box m={3}>
       <Paper variant="outlined">
-        <Box p={3}>
+        <Box p={4}>
           <header>{header}</header>
           <nav>{navigation}</nav>
           <main>{children}</main>

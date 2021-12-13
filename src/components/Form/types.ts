@@ -87,7 +87,7 @@ export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarat
   TupleListValue
 > & {
   readonly controlType: ControlType.TUPLE_LIST;
-  readonly fields: string[];
+  readonly fields?: string[];
   readonly separator?: ReactNode;
 };
 

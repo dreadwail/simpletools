@@ -1,4 +1,5 @@
 import Box from '@material-ui/core/Box';
+import Grid from '@material-ui/core/Grid';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -8,7 +9,6 @@ import WebIcon from '@material-ui/icons/Language';
 import LinkIcon from '@material-ui/icons/Link';
 import { FC, useCallback, useMemo, useState } from 'react';
 
-import Flex from '../Flex';
 import Form, {
   BlockDeclaration,
   FieldDeclaration,
@@ -44,7 +44,8 @@ type URLFieldName =
   | 'fragment'
   | 'queryParams'
   | 'username'
-  | 'password';
+  | 'password'
+  | 'listTest';
 
 const schemeField: FieldDeclaration<URLFieldName> = {
   controlType: ControlType.SELECT,
@@ -104,8 +105,18 @@ const queryParamsField: FieldDeclaration<URLFieldName> = {
   name: 'queryParams',
   width: Width.FULL,
   isRequired: false,
+  helperText: 'stuff!',
   label: 'Query Params',
   fields: ['Key', 'Value'],
+};
+
+const listTestField: FieldDeclaration<URLFieldName> = {
+  controlType: ControlType.TUPLE_LIST,
+  name: 'listTest',
+  width: Width.FULL,
+  isRequired: false,
+  label: 'List Test',
+  // fields: ['Key', 'Value'],
 };
 
 const usernameField: FieldDeclaration<URLFieldName> = {
@@ -141,10 +152,8 @@ const fields: BlockDeclaration<URLFieldName> = {
       direction: Direction.HORIZONTAL,
       blocks: [usernameField, passwordField],
     },
-    {
-      label: 'Query Params',
-      blocks: [queryParamsField],
-    },
+    queryParamsField,
+    listTestField,
   ],
 };
 
@@ -228,39 +237,43 @@ const URLComposer: FC = () => {
 
   return (
     <div>
-      <Box mx={2} mb={4}>
+      <Box mb={4}>
         <Text>Use the fields below to construct a URL.</Text>
         <Paper variant="outlined">
-          <Flex alignItems="center" p={1}>
+          <Box display="flex" alignItems="center" p={1}>
             <WebIcon fontSize="large" />
             <Box ml={2}>
               <Heading level={2} visualLevel={4}>
                 {url}
               </Heading>
             </Box>
-          </Flex>
+          </Box>
         </Paper>
       </Box>
-      <Flex>
-        <Form fields={fields} onChange={onChange} />
-        <Box p={4} flexBasis="50%">
-          <Heading level={3} visualLevel={6}>
-            Resources:
-          </Heading>
-          <List dense>
-            {resources.map(({ href, children }) => (
-              <ListItem key={href}>
-                <ListItemIcon>
-                  <LinkIcon />
-                </ListItemIcon>
-                <ListItemText>
-                  <Link href={href}>{children}</Link>
-                </ListItemText>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      </Flex>
+      <Grid container>
+        <Grid item xs={12} md={7}>
+          <Form fields={fields} onChange={onChange} />
+        </Grid>
+        <Grid item xs={12} md={5}>
+          <Box px={4} py={2} flexBasis="50%">
+            <Heading level={3} visualLevel={6}>
+              Resources:
+            </Heading>
+            <List dense>
+              {resources.map(({ href, children }) => (
+                <ListItem key={href}>
+                  <ListItemIcon>
+                    <LinkIcon />
+                  </ListItemIcon>
+                  <ListItemText>
+                    <Link href={href}>{children}</Link>
+                  </ListItemText>
+                </ListItem>
+              ))}
+            </List>
+          </Box>
+        </Grid>
+      </Grid>
     </div>
   );
 };
