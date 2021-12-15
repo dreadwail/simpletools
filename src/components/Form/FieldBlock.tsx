@@ -124,7 +124,7 @@ const FieldBlock = <TFieldName extends string>({
 
     return (
       <GridBlock isContainer={false} width={block.width}>
-        <Box pr={GAP}>
+        <Box my={GAP} mr={GAP}>
           <Field
             {...block}
             isRequired={isRequired}
@@ -134,6 +134,7 @@ const FieldBlock = <TFieldName extends string>({
             value={values[block.name]}
             onChangeField={onChangeField}
             onBlurField={onBlurField}
+            visualGap={GAP}
           />
         </Box>
       </GridBlock>
@@ -170,7 +171,9 @@ const FieldBlock = <TFieldName extends string>({
         direction={block.direction}
       >
         <Box width="100%">
-          <FieldSet label={block.label}>{subBlocks}</FieldSet>
+          <FieldSet label={block.label} visualGap={GAP}>
+            {subBlocks}
+          </FieldSet>
         </Box>
       </GridBlock>
     );

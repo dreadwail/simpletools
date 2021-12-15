@@ -1,18 +1,20 @@
 import Box from '@material-ui/core/Box';
 import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
+import { useTheme } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import useMediaQuery from '@material-ui/core/useMediaQuery';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import DeleteIcon from '@material-ui/icons/Delete';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import FieldSet from '../FieldSet';
-import type { TupleListFieldDeclaration, TupleListValue, TupleValue } from '../types';
+import type { TupleListFieldDeclaration, ListValue, TupleValue } from '../types';
 
 import Input, { KeyPress } from './Input';
 
@@ -23,11 +25,14 @@ export type TupleListProps<TFieldName extends string> = Omit<
   readonly name?: string;
   readonly isRequired?: boolean;
   readonly isDisabled?: boolean;
-  readonly value?: TupleListValue;
+  readonly value?: ListValue;
   readonly hasError?: boolean;
-  readonly onChange?: (value: TupleListValue) => void;
+  readonly onChange?: (value: ListValue) => void;
   readonly onBlur?: () => void;
+  readonly visualGap?: number;
 };
+
+const DEFAULT_GAP = 1;
 
 const TupleList = <TFieldName extends string>({
   isRequired,
@@ -41,6 +46,7 @@ const TupleList = <TFieldName extends string>({
   hasError,
   onChange,
   onBlur,
+  visualGap = DEFAULT_GAP,
 }: TupleListProps<TFieldName>) => {
   const normalizedFields = useMemo(() => fields ?? [label], [label, fields]);
   const initialTupleToAdd = useMemo(
@@ -53,7 +59,7 @@ const TupleList = <TFieldName extends string>({
   );
 
   const [tupleToAdd, setTupleToAdd] = useState<TupleValue>(initialTupleToAdd);
-  const [tupleList, setTupleList] = useState<TupleListValue>(value ?? initialValue ?? []);
+  const [tupleList, setTupleList] = useState<ListValue>(value ?? initialValue ?? []);
   const [touched, setTouched] = useState<boolean[]>(initialTouched);
 
   useEffect(() => {
@@ -94,7 +100,7 @@ const TupleList = <TFieldName extends string>({
   }, [normalizedFields, onBlur, touched]);
 
   const onClickAdd = useCallback(() => {
-    setTupleList((oldTupleList: TupleListValue): TupleListValue => [...oldTupleList, tupleToAdd]);
+    setTupleList((oldTupleList: ListValue): ListValue => [...oldTupleList, tupleToAdd]);
     setTupleToAdd(initialTupleToAdd);
   }, [initialTupleToAdd, tupleToAdd]);
 
@@ -129,7 +135,7 @@ const TupleList = <TFieldName extends string>({
   );
 
   const onClickDelete = useCallback((index: number) => {
-    setTupleList((oldTupleList: TupleListValue): TupleListValue => {
+    setTupleList((oldTupleList: ListValue): ListValue => {
       const newTupleList = [...oldTupleList];
       newTupleList.splice(index, 1);
       return newTupleList;
@@ -150,15 +156,22 @@ const TupleList = <TFieldName extends string>({
     [normalizedFields.length]
   );
 
+  const theme = useTheme();
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('sm'));
+
   return (
     <Box display="flex" flexDirection="column" width="100%">
-      <FieldSet label={label} helperText={helperText}>
+      <FieldSet label={label} helperText={helperText} visualGap={visualGap}>
         <Grid container alignItems="center">
           <Grid container item xs>
             {normalizedFields.map((field, index) => (
               <Fragment key={field}>
                 <Grid item xs={12} sm>
-                  <Box pr={0.5} pb={0.5}>
+                  <Box
+                    pl={isLargeScreen && index > 0 ? visualGap : 0}
+                    pr={isLargeScreen && index < normalizedFields.length ? visualGap : 0}
+                    pb={visualGap}
+                  >
                     <Input
                       isRequired={isRequired && isLastField(index)}
                       isDisabled={isDisabled}

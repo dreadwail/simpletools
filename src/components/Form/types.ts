@@ -1,11 +1,10 @@
 import type { ReactNode } from 'react';
 
 export type SingleValue = string;
-export type ListValue = string[];
-export type TupleValue = string[];
-export type TupleListValue = TupleValue[];
+export type TupleValue = SingleValue[];
+export type ListValue = TupleValue[];
 
-export type Value = SingleValue | ListValue | TupleListValue;
+export type Value = SingleValue | ListValue;
 
 export type Values<TFieldName extends string> = { [key in TFieldName]?: Value };
 export type Errors<TFieldName extends string> = { [key in TFieldName]?: string };
@@ -34,7 +33,6 @@ export enum ControlType {
   INPUT,
   SELECT,
   LIST,
-  TUPLE_LIST,
 }
 
 type FieldDeclarationBase<TFieldName extends string, TValue extends Value> = {
@@ -73,20 +71,11 @@ export type SelectFieldDeclaration<TFieldName extends string> = FieldDeclaration
   readonly options: SelectOption[];
 };
 
-export type ListFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
+export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
   TFieldName,
   ListValue
 > & {
   readonly controlType: ControlType.LIST;
-  readonly prefix?: ReactNode;
-  readonly suffix?: ReactNode;
-};
-
-export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
-  TFieldName,
-  TupleListValue
-> & {
-  readonly controlType: ControlType.TUPLE_LIST;
   readonly fields?: string[];
   readonly separator?: ReactNode;
 };
@@ -94,7 +83,6 @@ export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarat
 export type FieldDeclaration<TFieldName extends string> =
   | InputFieldDeclaration<TFieldName>
   | SelectFieldDeclaration<TFieldName>
-  | ListFieldDeclaration<TFieldName>
   | TupleListFieldDeclaration<TFieldName>;
 
 export type BlockDeclaration<TFieldName extends string> = {

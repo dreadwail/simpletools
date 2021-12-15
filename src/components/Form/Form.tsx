@@ -13,7 +13,6 @@ import {
   Values,
   SingleValue,
   ListValue,
-  TupleListValue,
 } from './types';
 
 type OnChangePayload<TFieldName extends string> = {
@@ -110,16 +109,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
           }
           return { ...memo, [fieldName]: field.validate?.(textValue, values) };
         case ControlType.LIST:
-          const listValue = values[field.name] as ListValue | undefined;
-          if (!listValue || listValue.length === 0) {
-            if (isRequired) {
-              return { ...memo, [fieldName]: 'Required' };
-            }
-            return memo;
-          }
-          return { ...memo, [fieldName]: field.validate?.(listValue, values) };
-        case ControlType.TUPLE_LIST:
-          const tupleListValue = values[field.name] as TupleListValue | undefined;
+          const tupleListValue = values[field.name] as ListValue | undefined;
           if (!tupleListValue || tupleListValue.length === 0) {
             if (isRequired) {
               return { ...memo, [fieldName]: 'Required' };

@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
 import Input from './fields/Input';
-import List from './fields/List';
 import Select from './fields/Select';
 import TupleList from './fields/TupleList';
 import {
@@ -12,7 +11,6 @@ import {
   Value,
   SingleValue,
   ListValue,
-  TupleListValue,
 } from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
@@ -25,6 +23,7 @@ export type FieldProps<TFieldName extends string> = FieldDeclaration<TFieldName>
   readonly value?: Value;
   readonly onChangeField: OnChangeHandler<TFieldName>;
   readonly onBlurField: OnBlurHandler<TFieldName>;
+  readonly visualGap?: number;
 };
 
 type HelperText = {
@@ -40,6 +39,7 @@ const Field = <TFieldName extends string>({
   onBlurField,
   isRequired,
   isDisabled,
+  visualGap,
   ...field
 }: FieldProps<TFieldName>) => {
   const onChangeHandler = useCallback(
@@ -95,7 +95,7 @@ const Field = <TFieldName extends string>({
       );
     case ControlType.LIST:
       return (
-        <List
+        <TupleList
           {...field}
           value={value as ListValue | undefined}
           isRequired={isRequired}
@@ -104,19 +104,7 @@ const Field = <TFieldName extends string>({
           hasError={adjustedHelperText.isError}
           onChange={onChangeHandler}
           onBlur={onBlurHandler}
-        />
-      );
-    case ControlType.TUPLE_LIST:
-      return (
-        <TupleList
-          {...field}
-          value={value as TupleListValue | undefined}
-          isRequired={isRequired}
-          isDisabled={isDisabled}
-          helperText={adjustedHelperText.text}
-          hasError={adjustedHelperText.isError}
-          onChange={onChangeHandler}
-          onBlur={onBlurHandler}
+          visualGap={visualGap}
         />
       );
     default:

@@ -101,7 +101,7 @@ const fragmentField: FieldDeclaration<URLFieldName> = {
 };
 
 const queryParamsField: FieldDeclaration<URLFieldName> = {
-  controlType: ControlType.TUPLE_LIST,
+  controlType: ControlType.LIST,
   name: 'queryParams',
   width: Width.FULL,
   isRequired: false,
@@ -111,12 +111,12 @@ const queryParamsField: FieldDeclaration<URLFieldName> = {
 };
 
 const listTestField: FieldDeclaration<URLFieldName> = {
-  controlType: ControlType.TUPLE_LIST,
+  controlType: ControlType.LIST,
   name: 'listTest',
   width: Width.FULL,
   isRequired: false,
   label: 'List Test',
-  // fields: ['Key', 'Value'],
+  fields: ['Foo', 'Bar', 'Baz'],
 };
 
 const usernameField: FieldDeclaration<URLFieldName> = {
