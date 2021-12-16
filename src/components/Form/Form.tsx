@@ -1,55 +1,49 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import FieldBlock from './FieldBlock';
+import FieldBlock, { FieldBlockProps } from './FieldBlock';
 import {
   isBlockDeclaration,
   ControlType,
   Errors,
   BlockDeclaration,
   FieldDeclaration,
-  OnBlurHandler,
-  OnChangeHandler,
   Touched,
-  Values,
-  SingleValue,
-  ListValue,
+  FormShape,
 } from './types';
 
-type OnChangePayload<TFieldName extends string> = {
-  readonly values: Values<TFieldName>;
-  readonly errors: Errors<TFieldName>;
+type OnChangePayload<TType extends FormShape> = {
+  readonly values: Partial<TType>;
+  readonly errors: Errors<TType>;
   readonly isValid: boolean;
 };
 
-export type OnFormChange<TFieldName extends string> = (
-  payload: OnChangePayload<TFieldName>
-) => void;
+export type OnFormChange<TType extends FormShape> = (payload: OnChangePayload<TType>) => void;
 
-export type FormProps<TFieldName extends string> = {
-  readonly fields: BlockDeclaration<TFieldName>;
-  readonly onChange: OnFormChange<TFieldName>;
+export type FormProps<TType extends FormShape> = {
+  readonly fields: BlockDeclaration<TType>;
+  readonly onChange: OnFormChange<TType>;
 };
 
-type FieldDeclarations<TFieldName extends string> = {
-  [key in TFieldName]?: FieldDeclaration<TFieldName>;
+type FieldDeclarations<TType extends FormShape> = {
+  [key in keyof TType]?: FieldDeclaration<TType, string & keyof TType>;
 };
 
-const extractFields = <TFieldName extends string>(
-  block: BlockDeclaration<TFieldName>
-): FieldDeclarations<TFieldName> =>
-  block.blocks.reduce<FieldDeclarations<TFieldName>>((memo, currentBlock) => {
+const extractFields = <TType extends FormShape>(
+  block: BlockDeclaration<TType>
+): FieldDeclarations<TType> =>
+  block.blocks.reduce<FieldDeclarations<TType>>((memo, currentBlock) => {
     if (isBlockDeclaration(currentBlock)) {
       return { ...memo, ...extractFields(currentBlock) };
     }
     return { ...memo, [currentBlock.name]: currentBlock };
   }, {});
 
-const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<TFieldName>) => {
+const Form = <TType extends FormShape>({ fields: block, onChange }: FormProps<TType>) => {
   const fieldsByName = useMemo(() => extractFields(block), [block]);
-  const fieldNames = useMemo(() => Object.keys(fieldsByName) as TFieldName[], [fieldsByName]);
+  const fieldNames = useMemo(() => Object.keys(fieldsByName) as (keyof TType)[], [fieldsByName]);
   const initialValues = useMemo(
     () =>
-      fieldNames.reduce<Values<TFieldName>>(
+      fieldNames.reduce<Partial<TType>>(
         (memo, fieldName) => ({
           ...memo,
           [fieldName]: fieldsByName[fieldName]?.initialValue,
@@ -59,9 +53,9 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
     [fieldNames, fieldsByName]
   );
 
-  const [values, setValues] = useState<Values<TFieldName>>(initialValues);
-  const [errors, setErrors] = useState<Errors<TFieldName>>({});
-  const [touched, setTouched] = useState<Touched<TFieldName>>({});
+  const [values, setValues] = useState<Partial<TType>>(initialValues);
+  const [errors, setErrors] = useState<Errors<TType>>({});
+  const [touched, setTouched] = useState<Touched<TType>>({});
 
   const isValid = useMemo(
     () => fieldNames.filter(fieldName => errors[fieldName]).length === 0,
@@ -72,7 +66,7 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
     onChange({ values, errors, isValid });
   }, [onChange, values, errors, isValid]);
 
-  const onChangeField = useCallback<OnChangeHandler<TFieldName>>(
+  const onChangeField = useCallback<FieldBlockProps<TType>['onChangeField']>(
     (name, newValue) => {
       const field = fieldsByName[name];
       if (!field) {
@@ -83,12 +77,12 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
     [fieldsByName]
   );
 
-  const onBlurField = useCallback<OnBlurHandler<TFieldName>>(name => {
+  const onBlurField = useCallback<FieldBlockProps<TType>['onBlurField']>(name => {
     setTouched(oldTouched => ({ ...oldTouched, [name]: true }));
   }, []);
 
   useEffect(() => {
-    const newErrors = fieldNames.reduce<Errors<TFieldName>>((memo, fieldName) => {
+    const newErrors = fieldNames.reduce<Errors<TType>>((memo, fieldName) => {
       const field = fieldsByName[fieldName];
       if (!field) {
         return memo;
@@ -100,17 +94,17 @@ const Form = <TFieldName extends string>({ fields: block, onChange }: FormProps<
       switch (field.controlType) {
         case ControlType.INPUT:
         case ControlType.SELECT:
-          const textValue = values[field.name] as SingleValue | undefined;
-          if (!textValue) {
+          const inputValue = values[field.name];
+          if (!inputValue) {
             if (isRequired) {
               return { ...memo, [fieldName]: 'Required' };
             }
             return memo;
           }
-          return { ...memo, [fieldName]: field.validate?.(textValue, values) };
+          return { ...memo, [fieldName]: field.validate?.(inputValue, values) };
         case ControlType.LIST:
-          const tupleListValue = values[field.name] as ListValue | undefined;
-          if (!tupleListValue || tupleListValue.length === 0) {
+          const listValue = values[field.name];
+          if (!listValue || listValue.length === 0) {
             if (isRequired) {
               return { ...memo, [fieldName]: 'Required' };
             }

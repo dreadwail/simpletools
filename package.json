@@ -121,9 +121,11 @@
         2,
         {
           "SwitchCase": 1,
+          "flatTernaryExpressions": true,
           "ignoredNodes": [
             "TSTypeParameterInstantiation",
-            "TSIntersectionType"
+            "TSIntersectionType",
+            "ConditionalExpression"
           ]
         }
       ],

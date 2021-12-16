@@ -6,7 +6,7 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import type { FC } from 'react';
 
-type FieldSetProps = {
+export type FieldSetProps = {
   readonly label: string;
   readonly helperText?: string;
   readonly visualGap?: number;

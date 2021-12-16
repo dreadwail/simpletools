@@ -1,28 +1,24 @@
 import { useCallback, useMemo } from 'react';
 
-import Input from './fields/Input';
-import Select from './fields/Select';
-import TupleList from './fields/TupleList';
-import {
-  ControlType,
-  FieldDeclaration,
-  OnBlurHandler,
-  OnChangeHandler,
-  Value,
-  SingleValue,
-  ListValue,
-} from './types';
+import ListField from '../ListField';
+import SelectField from '../SelectField';
+import TextField from '../TextField';
+
+import { ControlType, FormShape, ErrorMessage, FieldDeclaration } from './types';
 
 const DEFAULT_HELPER_TEXT = ' ';
 
-export type FieldProps<TFieldName extends string> = FieldDeclaration<TFieldName> & {
+export type FieldProps<
+  TType extends FormShape,
+  TFieldName extends string & keyof TType
+> = FieldDeclaration<TType, TFieldName> & {
   readonly isRequired: boolean;
   readonly isDisabled: boolean;
   readonly hasBeenTouched: boolean;
-  readonly error?: string;
-  readonly value?: Value;
-  readonly onChangeField: OnChangeHandler<TFieldName>;
-  readonly onBlurField: OnBlurHandler<TFieldName>;
+  readonly error?: ErrorMessage;
+  readonly value?: TType[TFieldName];
+  readonly onChangeField: (name: TFieldName, value: TType[TFieldName]) => void;
+  readonly onBlurField: (name: TFieldName) => void;
   readonly visualGap?: number;
 };
 
@@ -31,19 +27,19 @@ type HelperText = {
   readonly isError: boolean;
 };
 
-const Field = <TFieldName extends string>({
+const Field = <TType extends FormShape, TFieldName extends string & keyof TType>({
   hasBeenTouched,
   value,
   error,
   onChangeField,
   onBlurField,
+  visualGap,
   isRequired,
   isDisabled,
-  visualGap,
   ...field
-}: FieldProps<TFieldName>) => {
+}: FieldProps<TType, TFieldName>) => {
   const onChangeHandler = useCallback(
-    (newValue: Value) => {
+    (newValue: TType[TFieldName]) => {
       onChangeField(field.name, newValue);
     },
     [onChangeField, field.name]
@@ -69,41 +65,48 @@ const Field = <TFieldName extends string>({
   switch (field.controlType) {
     case ControlType.SELECT:
       return (
-        <Select
-          {...field}
-          value={value as SingleValue | undefined}
-          isRequired={isRequired}
-          isDisabled={isDisabled}
-          helperText={adjustedHelperText.text}
+        <SelectField
           hasError={adjustedHelperText.isError}
-          onChange={onChangeHandler}
+          helperText={adjustedHelperText.text}
+          isDisabled={isDisabled}
+          isRequired={isRequired}
+          label={field.label}
+          name={field.name}
           onBlur={onBlurHandler}
+          onChange={onChangeHandler}
+          options={field.options}
+          value={value}
         />
       );
     case ControlType.INPUT:
       return (
-        <Input
-          {...field}
-          value={value as SingleValue | undefined}
-          isRequired={isRequired}
-          isDisabled={isDisabled}
-          helperText={adjustedHelperText.text}
+        <TextField
           hasError={adjustedHelperText.isError}
-          onChange={onChangeHandler}
+          helperText={adjustedHelperText.text}
+          isDisabled={isDisabled}
+          isRequired={isRequired}
+          label={field.label}
+          name={field.name}
           onBlur={onBlurHandler}
+          onChange={onChangeHandler}
+          prefix={field.prefix}
+          suffix={field.suffix}
+          value={value}
         />
       );
     case ControlType.LIST:
       return (
-        <TupleList
-          {...field}
-          value={value as ListValue | undefined}
-          isRequired={isRequired}
-          isDisabled={isDisabled}
-          helperText={adjustedHelperText.text}
+        <ListField
+          fields={field.fields}
           hasError={adjustedHelperText.isError}
-          onChange={onChangeHandler}
+          helperText={adjustedHelperText.text}
+          isDisabled={isDisabled}
+          isRequired={isRequired}
+          label={field.label}
           onBlur={onBlurHandler}
+          onChange={onChangeHandler}
+          separator={field.separator}
+          value={value}
           visualGap={visualGap}
         />
       );

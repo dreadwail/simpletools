@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
 
-export type SingleValue = string;
-export type TupleValue = SingleValue[];
-export type ListValue = TupleValue[];
+export type Scalar = string | number;
+export type Tuple = Scalar[];
+export type TupleList = Tuple[];
 
-export type Value = SingleValue | ListValue;
+export type FormShape = { [key: string]: Scalar | TupleList };
 
-export type Values<TFieldName extends string> = { [key in TFieldName]?: Value };
-export type Errors<TFieldName extends string> = { [key in TFieldName]?: string };
-export type Touched<TFieldName extends string> = { [key in TFieldName]?: boolean };
+export type ErrorMessage = string;
+export type Errors<TType extends FormShape> = { [key in keyof TType]?: ErrorMessage };
+
+export type Touched<TType extends FormShape> = { [key in keyof TType]?: boolean };
 
 export enum Direction {
   HORIZONTAL = 'horizontal',
@@ -35,27 +36,41 @@ export enum ControlType {
   LIST,
 }
 
-type FieldDeclarationBase<TFieldName extends string, TValue extends Value> = {
-  readonly name: TFieldName;
-  readonly label: string;
-  readonly width?: Width;
-  readonly isRequired?: boolean | ((values: Values<TFieldName>) => boolean);
-  readonly isDisabled?: boolean | ((values: Values<TFieldName>) => boolean);
-  readonly helperText?: string;
-  readonly initialValue?: TValue;
-  readonly validate?: (
-    value: TValue,
-    values: Values<TFieldName>
-  ) => string | null | undefined | void;
-};
+type Validator<TType extends FormShape, TFieldName extends keyof TType> = (
+  value: TType[TFieldName],
+  values: Partial<TType>
+) => ErrorMessage | null | void;
 
-export type InputFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
-  TFieldName,
-  SingleValue
-> & {
+// type FieldDeclarationBase<
+//   TType extends FormShape,
+//   TFieldName extends keyof TType,
+//   TValueConstraint extends FormValue
+// > = {
+//   readonly name: TFieldName;
+//   readonly initialValue?: TType[TFieldName] & TValueConstraint;
+//   readonly validate?: Validator<TType, TFieldName, TValueConstraint>;
+//   readonly label: string;
+//   readonly width?: Width;
+//   readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
+//   readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
+//   readonly helperText?: string;
+// };
+
+export type InputFieldDeclaration<
+  TType extends FormShape,
+  TFieldName extends string & keyof TType
+> = {
   readonly controlType: ControlType.INPUT;
+  readonly helperText?: string;
+  readonly initialValue?: TType[TFieldName];
+  readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
+  readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
+  readonly label: string;
+  readonly name: TFieldName;
   readonly prefix?: ReactNode;
   readonly suffix?: ReactNode;
+  readonly validate?: Validator<TType, TFieldName>;
+  readonly width?: Width;
 };
 
 export type SelectOption = {
@@ -63,41 +78,52 @@ export type SelectOption = {
   readonly value: string;
 };
 
-export type SelectFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
-  TFieldName,
-  SingleValue
-> & {
+export type SelectFieldDeclaration<
+  TType extends FormShape,
+  TFieldName extends string & keyof TType
+> = {
   readonly controlType: ControlType.SELECT;
   readonly options: SelectOption[];
+  readonly name: TFieldName;
+  readonly initialValue?: TType[TFieldName];
+  readonly validate?: Validator<TType, TFieldName>;
+  readonly label: string;
+  readonly width?: Width;
+  readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
+  readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
+  readonly helperText?: string;
 };
 
-export type TupleListFieldDeclaration<TFieldName extends string> = FieldDeclarationBase<
-  TFieldName,
-  ListValue
-> & {
+export type TupleListFieldDeclaration<
+  TType extends FormShape,
+  TFieldName extends string & keyof TType
+> = {
   readonly controlType: ControlType.LIST;
   readonly fields?: string[];
   readonly separator?: ReactNode;
+  readonly name: TFieldName;
+  readonly initialValue?: TType[TFieldName];
+  readonly validate?: Validator<TType, TFieldName>;
+  readonly label: string;
+  readonly width?: Width;
+  readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
+  readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
+  readonly helperText?: string;
 };
 
-export type FieldDeclaration<TFieldName extends string> =
-  | InputFieldDeclaration<TFieldName>
-  | SelectFieldDeclaration<TFieldName>
-  | TupleListFieldDeclaration<TFieldName>;
+export type FieldDeclaration<TType extends FormShape, TFieldName extends string & keyof TType> =
+  | InputFieldDeclaration<TType, TFieldName>
+  | SelectFieldDeclaration<TType, TFieldName>
+  | TupleListFieldDeclaration<TType, TFieldName>;
 
-export type BlockDeclaration<TFieldName extends string> = {
+export type BlockDeclaration<TType extends FormShape> = {
   readonly direction?: Direction;
   readonly alignment?: Alignment;
   readonly width?: Width;
   readonly label?: string;
-  readonly blocks: (FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>)[];
+  readonly blocks: (FieldDeclaration<TType, string & keyof TType> | BlockDeclaration<TType>)[];
 };
 
-export const isBlockDeclaration = <TFieldName extends string>(
-  block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
-): block is BlockDeclaration<TFieldName> =>
-  Array.isArray((block as BlockDeclaration<TFieldName>).blocks);
-
-export type OnChangeHandler<TFieldName extends string> = (name: TFieldName, value: Value) => void;
-
-export type OnBlurHandler<TFieldName extends string> = (name: TFieldName) => void;
+export const isBlockDeclaration = <TType extends FormShape>(
+  block: FieldDeclaration<TType, string & keyof TType> | BlockDeclaration<TType>
+): block is BlockDeclaration<TType> => Array.isArray((block as BlockDeclaration<TType>).blocks);

@@ -11,43 +11,42 @@ import TableRow from '@material-ui/core/TableRow';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import AddIcon from '@material-ui/icons/AddCircleOutline';
 import DeleteIcon from '@material-ui/icons/Delete';
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import FieldSet from '../FieldSet';
-import type { TupleListFieldDeclaration, ListValue, TupleValue } from '../types';
+import TextField, { KeyPress, TextFieldProps } from '../TextField';
 
-import Input, { KeyPress } from './Input';
-
-export type TupleListProps<TFieldName extends string> = Omit<
-  TupleListFieldDeclaration<TFieldName>,
-  'controlType' | 'name' | 'isRequired' | 'isDisabled'
-> & {
-  readonly name?: string;
-  readonly isRequired?: boolean;
-  readonly isDisabled?: boolean;
-  readonly value?: ListValue;
+export type ListFieldProps = {
+  readonly fields?: string[];
   readonly hasError?: boolean;
-  readonly onChange?: (value: ListValue) => void;
+  readonly helperText?: string;
+  readonly isDisabled?: boolean;
+  readonly isRequired?: boolean;
+  readonly label: string;
   readonly onBlur?: () => void;
+  readonly onChange?: (value: string[][]) => void;
+  readonly separator?: ReactNode;
+  readonly size?: TextFieldProps['size'];
+  readonly value?: string[][];
   readonly visualGap?: number;
 };
 
 const DEFAULT_GAP = 1;
 
-const TupleList = <TFieldName extends string>({
-  isRequired,
-  isDisabled,
-  label,
+const ListField = ({
   fields,
-  separator,
-  helperText,
-  initialValue,
-  value,
   hasError,
-  onChange,
+  helperText,
+  isDisabled,
+  isRequired,
+  label,
   onBlur,
+  onChange,
+  separator,
+  size,
+  value = [],
   visualGap = DEFAULT_GAP,
-}: TupleListProps<TFieldName>) => {
+}: ListFieldProps) => {
   const normalizedFields = useMemo(() => fields ?? [label], [label, fields]);
   const initialTupleToAdd = useMemo(
     () => Array<string>(normalizedFields.length).fill(''),
@@ -58,8 +57,8 @@ const TupleList = <TFieldName extends string>({
     [normalizedFields]
   );
 
-  const [tupleToAdd, setTupleToAdd] = useState<TupleValue>(initialTupleToAdd);
-  const [tupleList, setTupleList] = useState<ListValue>(value ?? initialValue ?? []);
+  const [tupleToAdd, setTupleToAdd] = useState<string[]>(initialTupleToAdd);
+  const [tupleList, setTupleList] = useState<string[][]>(value ?? []);
   const [touched, setTouched] = useState<boolean[]>(initialTouched);
 
   useEffect(() => {
@@ -100,7 +99,7 @@ const TupleList = <TFieldName extends string>({
   }, [normalizedFields, onBlur, touched]);
 
   const onClickAdd = useCallback(() => {
-    setTupleList((oldTupleList: ListValue): ListValue => [...oldTupleList, tupleToAdd]);
+    setTupleList(oldTupleList => [...oldTupleList, tupleToAdd]);
     setTupleToAdd(initialTupleToAdd);
   }, [initialTupleToAdd, tupleToAdd]);
 
@@ -135,7 +134,7 @@ const TupleList = <TFieldName extends string>({
   );
 
   const onClickDelete = useCallback((index: number) => {
-    setTupleList((oldTupleList: ListValue): ListValue => {
+    setTupleList((oldTupleList: string[][]): string[][] => {
       const newTupleList = [...oldTupleList];
       newTupleList.splice(index, 1);
       return newTupleList;
@@ -172,7 +171,7 @@ const TupleList = <TFieldName extends string>({
                     pr={isLargeScreen && index < normalizedFields.length ? visualGap : 0}
                     pb={visualGap}
                   >
-                    <Input
+                    <TextField
                       isRequired={isRequired && isLastField(index)}
                       isDisabled={isDisabled}
                       label={field}
@@ -184,6 +183,7 @@ const TupleList = <TFieldName extends string>({
                       onBlur={onBlurTuples[index]}
                       onChange={onChangeTuples[index]}
                       onKeyPress={onKeyPresses[index]}
+                      size={size}
                     />
                   </Box>
                 </Grid>
@@ -249,4 +249,4 @@ const TupleList = <TFieldName extends string>({
   );
 };
 
-export default TupleList;
+export default ListField;

@@ -2,33 +2,29 @@ import Box from '@material-ui/core/Box';
 import Grid, { GridDirection, GridJustification, GridSize } from '@material-ui/core/Grid';
 import type { FC } from 'react';
 
-import Field from './Field';
-import FieldSet from './FieldSet';
+import FieldSet from '../FieldSet';
+
+import Field, { FieldProps } from './Field';
 import {
   Errors,
   FieldDeclaration,
   BlockDeclaration,
-  OnBlurHandler,
-  OnChangeHandler,
   Touched,
   Width,
-  Values,
   Direction,
   Alignment,
+  isBlockDeclaration,
+  FormShape,
 } from './types';
 
-type FieldBlockProps<TFieldName extends string> = {
-  readonly block: BlockDeclaration<TFieldName> | FieldDeclaration<TFieldName>;
-  readonly values: Values<TFieldName>;
-  readonly errors: Errors<TFieldName>;
-  readonly touched: Touched<TFieldName>;
-  readonly onChangeField: OnChangeHandler<TFieldName>;
-  readonly onBlurField: OnBlurHandler<TFieldName>;
+export type FieldBlockProps<TType extends FormShape> = {
+  readonly block: BlockDeclaration<TType> | FieldDeclaration<TType, string & keyof TType>;
+  readonly values: Partial<TType>;
+  readonly errors: Errors<TType>;
+  readonly touched: Touched<TType>;
+  readonly onChangeField: FieldProps<TType, string & keyof TType>['onChangeField'];
+  readonly onBlurField: FieldProps<TType, string & keyof TType>['onBlurField'];
 };
-
-const isFieldDeclaration = <TFieldName extends string>(
-  block: FieldDeclaration<TFieldName> | BlockDeclaration<TFieldName>
-): block is FieldDeclaration<TFieldName> => !!(block as FieldDeclaration<TFieldName>).name;
 
 const cssJustifications: Record<Alignment, GridJustification> = {
   [Alignment.START]: 'flex-start',
@@ -108,15 +104,15 @@ const GridBlock: FC<GridBlockProps> = ({
 
 const GAP = 0.5;
 
-const FieldBlock = <TFieldName extends string>({
+const FieldBlock = <TType extends FormShape>({
   block,
   values,
   errors,
   touched,
   onChangeField,
   onBlurField,
-}: FieldBlockProps<TFieldName>) => {
-  if (isFieldDeclaration(block)) {
+}: FieldBlockProps<TType>) => {
+  if (!isBlockDeclaration(block)) {
     const isRequired =
       typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
     const isDisabled =

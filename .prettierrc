@@ -1,11 +1,16 @@
 {
-  "parser": "typescript",
   "printWidth": 100,
   "proseWrap": "always",
   "singleQuote": true,
   "trailingComma": "es5",
   "arrowParens": "avoid",
   "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "options": {
+        "parser": "typescript"
+      }
+    },
     {
       "files": ["*.json", ".*rc"],
       "options": {
