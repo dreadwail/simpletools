@@ -1,9 +1,9 @@
+import isEmpty from 'lodash/isEmpty';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import FieldBlock, { FieldBlockProps } from './FieldBlock';
 import {
-  isBlockDeclaration,
-  ControlType,
+  isFieldDeclaration,
   Errors,
   BlockDeclaration,
   FieldDeclaration,
@@ -11,7 +11,7 @@ import {
   FormShape,
 } from './types';
 
-type OnChangePayload<TType extends FormShape> = {
+export type OnChangePayload<TType extends FormShape> = {
   readonly values: Partial<TType>;
   readonly errors: Errors<TType>;
   readonly isValid: boolean;
@@ -25,22 +25,22 @@ export type FormProps<TType extends FormShape> = {
 };
 
 type FieldDeclarations<TType extends FormShape> = {
-  [key in keyof TType]?: FieldDeclaration<TType, string & keyof TType>;
+  [key in keyof TType]?: FieldDeclaration<TType, keyof TType>;
 };
 
 const extractFields = <TType extends FormShape>(
   block: BlockDeclaration<TType>
 ): FieldDeclarations<TType> =>
   block.blocks.reduce<FieldDeclarations<TType>>((memo, currentBlock) => {
-    if (isBlockDeclaration(currentBlock)) {
-      return { ...memo, ...extractFields(currentBlock) };
+    if (isFieldDeclaration(currentBlock)) {
+      return { ...memo, [currentBlock.name]: currentBlock };
     }
-    return { ...memo, [currentBlock.name]: currentBlock };
+    return { ...memo, ...extractFields(currentBlock) };
   }, {});
 
 const Form = <TType extends FormShape>({ fields: block, onChange }: FormProps<TType>) => {
   const fieldsByName = useMemo(() => extractFields(block), [block]);
-  const fieldNames = useMemo(() => Object.keys(fieldsByName) as (keyof TType)[], [fieldsByName]);
+  const fieldNames = useMemo<(keyof TType)[]>(() => Object.keys(fieldsByName), [fieldsByName]);
   const initialValues = useMemo(
     () =>
       fieldNames.reduce<Partial<TType>>(
@@ -91,30 +91,22 @@ const Form = <TType extends FormShape>({ fields: block, onChange }: FormProps<TT
       const isRequired =
         typeof field.isRequired === 'boolean' ? field.isRequired : !!field.isRequired?.(values);
 
-      switch (field.controlType) {
-        case ControlType.INPUT:
-        case ControlType.SELECT:
-          const inputValue = values[field.name];
-          if (!inputValue) {
-            if (isRequired) {
-              return { ...memo, [fieldName]: 'Required' };
-            }
-            return memo;
-          }
-          return { ...memo, [fieldName]: field.validate?.(inputValue, values) };
-        case ControlType.LIST:
-          const listValue = values[field.name];
-          if (!listValue || listValue.length === 0) {
-            if (isRequired) {
-              return { ...memo, [fieldName]: 'Required' };
-            }
-            return memo;
-          }
-          return { ...memo, [fieldName]: field.validate?.(tupleListValue, values) };
-        default:
-          return memo;
+      const toValidate = values[field.name];
+
+      if (
+        toValidate === null ||
+        toValidate === undefined ||
+        (typeof toValidate !== 'boolean' && isEmpty(toValidate))
+      ) {
+        if (isRequired) {
+          return { ...memo, [fieldName]: 'Required' };
+        }
+        return memo;
       }
+
+      return { ...memo, [fieldName]: field.validate?.(toValidate, values) };
     }, {});
+
     setErrors(oldErrors => ({ ...oldErrors, ...newErrors }));
   }, [fieldNames, fieldsByName, values]);
 

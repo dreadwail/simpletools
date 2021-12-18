@@ -16,70 +16,38 @@ import Form, {
   FormProps,
   Direction,
   Width,
-  Values,
-  Value,
 } from '../Form';
 import Heading from '../Heading';
 import Link, { LinkProps } from '../Link';
 import Text from '../Text';
 
-const validSchemes: string[] = [
+const validSchemes = [
   'https://',
   'http://',
-  'file://',
-  'git://',
-  'mailto:',
+  // 'file://',
+  // 'git://',
+  // 'mailto:',
   'ftp://',
-  'ldap://',
-  'ldaps://',
-  'blob:',
-  'cvs://',
-];
+  // 'ldap://',
+  // 'ldaps://',
+  // 'blob:',
+  // 'cvs://',
+] as const;
 
-type URLFieldName =
-  | 'scheme'
-  | 'host'
-  | 'port'
-  | 'path'
-  | 'fragment'
-  | 'queryParams'
-  | 'username'
-  | 'password'
-  | 'listTest';
+type ValidScheme = typeof validSchemes[number];
 
-const schemeField: FieldDeclaration<URLFieldName> = {
-  controlType: ControlType.SELECT,
-  name: 'scheme',
-  width: Width.QUARTER,
-  isRequired: true,
-  label: 'Scheme',
-  options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
-  initialValue: 'https://',
-  validate: value => {
-    if (value && !validSchemes.includes(value)) {
-      return 'Invalid scheme';
-    }
-  },
+type URLComposerForm = {
+  readonly scheme: ValidScheme;
+  readonly host: string;
+  readonly port?: number;
+  readonly path?: string;
+  readonly fragment?: string;
+  readonly queryParams?: [string, string][];
+  readonly username?: string;
+  readonly password?: string;
 };
 
-const hostField: FieldDeclaration<URLFieldName> = {
-  controlType: ControlType.INPUT,
-  name: 'host',
-  width: Width.HALF,
-  isRequired: true,
-  label: 'Host',
-};
-
-const portField: FieldDeclaration<URLFieldName> = {
-  controlType: ControlType.INPUT,
-  name: 'port',
-  width: Width.QUARTER,
-  isRequired: false,
-  label: 'Port',
-  initialValue: '443',
-};
-
-const pathField: FieldDeclaration<URLFieldName> = {
+const pathField: FieldDeclaration<URLComposerForm, 'path'> = {
   controlType: ControlType.INPUT,
   name: 'path',
   width: Width.HALF,
@@ -92,7 +60,7 @@ const pathField: FieldDeclaration<URLFieldName> = {
   },
 };
 
-const fragmentField: FieldDeclaration<URLFieldName> = {
+const fragmentField: FieldDeclaration<URLComposerForm, 'fragment'> = {
   controlType: ControlType.INPUT,
   name: 'fragment',
   width: Width.HALF,
@@ -100,7 +68,7 @@ const fragmentField: FieldDeclaration<URLFieldName> = {
   label: 'Fragment (Hash)',
 };
 
-const queryParamsField: FieldDeclaration<URLFieldName> = {
+const queryParamsField: FieldDeclaration<URLComposerForm, 'queryParams'> = {
   controlType: ControlType.LIST,
   name: 'queryParams',
   width: Width.FULL,
@@ -110,24 +78,14 @@ const queryParamsField: FieldDeclaration<URLFieldName> = {
   fields: ['Key', 'Value'],
 };
 
-const listTestField: FieldDeclaration<URLFieldName> = {
-  controlType: ControlType.LIST,
-  name: 'listTest',
-  width: Width.FULL,
-  isRequired: false,
-  label: 'List Test',
-  fields: ['Foo', 'Bar', 'Baz'],
-};
-
-const usernameField: FieldDeclaration<URLFieldName> = {
+const usernameField: FieldDeclaration<URLComposerForm, 'username'> = {
   controlType: ControlType.INPUT,
   name: 'username',
   width: Width.HALF,
-  isRequired: values => values.scheme === 'mailto:',
   label: 'Username',
 };
 
-const passwordField: FieldDeclaration<URLFieldName> = {
+const passwordField: FieldDeclaration<URLComposerForm, 'password'> = {
   controlType: ControlType.INPUT,
   name: 'password',
   width: Width.HALF,
@@ -135,12 +93,42 @@ const passwordField: FieldDeclaration<URLFieldName> = {
   label: 'Password',
 };
 
-const fields: BlockDeclaration<URLFieldName> = {
+const fields: BlockDeclaration<URLComposerForm> = {
   blocks: [
     {
       label: 'Connection',
       direction: Direction.HORIZONTAL,
-      blocks: [schemeField, hostField, portField],
+      blocks: [
+        {
+          controlType: ControlType.SELECT,
+          name: 'scheme',
+          width: Width.QUARTER,
+          isRequired: true,
+          label: 'Scheme',
+          options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
+          initialValue: 'https://',
+          validate: value => {
+            if (value && !validSchemes.includes(value)) {
+              return 'Invalid scheme';
+            }
+          },
+        },
+        {
+          controlType: ControlType.INPUT,
+          name: 'host',
+          width: Width.HALF,
+          isRequired: true,
+          label: 'Host',
+        },
+        {
+          controlType: ControlType.INPUT,
+          name: 'port',
+          width: Width.QUARTER,
+          isRequired: false,
+          label: 'Port',
+          initialValue: 443,
+        },
+      ],
     },
     {
       label: 'Resource',
@@ -153,53 +141,58 @@ const fields: BlockDeclaration<URLFieldName> = {
       blocks: [usernameField, passwordField],
     },
     queryParamsField,
-    listTestField,
   ],
 };
 
-const normalizePort = (scheme: Value | undefined, port: Value | undefined): Value | undefined => {
-  if (scheme === 'http://' && port === '80') {
+const normalizePort = (
+  scheme: URLComposerForm['scheme'] | undefined,
+  port: URLComposerForm['port'] | undefined
+): string => {
+  if (scheme === 'http://' && port === 80) {
     return '';
   }
-  if (scheme === 'https://' && port === '443') {
+  if (scheme === 'https://' && port === 443) {
     return '';
   }
-  return port;
+  return String(port);
 };
 
-const normalizeFragment = (fragment: Value | undefined): Value | undefined => {
+const normalizeFragment = (fragment: URLComposerForm['fragment'] | undefined): string => {
   if (fragment && typeof fragment === 'string' && !fragment.startsWith('#')) {
     return `#${fragment}`;
   }
-  return fragment;
+  return fragment ?? '';
 };
 
-const buildQueryParams = (queryParams: Value | undefined): string => {
-  if (Array.isArray(queryParams) && queryParams.length > 0 && Array.isArray(queryParams[0])) {
-    const params = new URLSearchParams('');
-    queryParams.forEach(([key, value]) => {
-      params.append(key, value);
-    });
-    return `?${params.toString()}`;
+const buildQueryParams = (queryParams: URLComposerForm['queryParams'] | undefined = []): string => {
+  if (queryParams.length === 0) {
+    return '';
   }
-  return '';
+  const params = new URLSearchParams('');
+  queryParams.forEach(([key, value]) => {
+    params.append(key, value);
+  });
+  return `?${params.toString()}`;
 };
 
-const normalizeCredentials = (username: Value | undefined, password: Value | undefined): string => {
+const normalizeCredentials = (
+  username: URLComposerForm['username'] | undefined,
+  password: URLComposerForm['password'] | undefined
+): string => {
   if (!username) {
     return '';
   }
   return `${[username, password].filter(x => x).join(':')}@`;
 };
 
-const normalizePath = (path: Value | undefined): string => {
-  if (path && typeof path === 'string') {
-    if (!path.startsWith('/')) {
-      return `/${path}`;
-    }
+const normalizePath = (path: URLComposerForm['path'] | undefined): string => {
+  if (!path) {
+    return '';
+  }
+  if (path.startsWith('/')) {
     return path;
   }
-  return '';
+  return `/${path}`;
 };
 
 const resources: LinkProps[] = [
@@ -209,10 +202,10 @@ const resources: LinkProps[] = [
 ];
 
 const URLComposer: FC = () => {
-  const [values, setValues] = useState<Values<URLFieldName>>({});
+  const [values, setValues] = useState<Partial<URLComposerForm>>({});
   const [isValid, setIsValid] = useState<boolean>(false);
 
-  const onChange = useCallback<FormProps<URLFieldName>['onChange']>(payload => {
+  const onChange = useCallback<FormProps<URLComposerForm>['onChange']>(payload => {
     setValues(payload.values);
     setIsValid(payload.isValid);
   }, []);

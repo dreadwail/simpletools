@@ -8,10 +8,10 @@ import { ControlType, FormShape, ErrorMessage, FieldDeclaration } from './types'
 
 const DEFAULT_HELPER_TEXT = ' ';
 
-export type FieldProps<
-  TType extends FormShape,
-  TFieldName extends string & keyof TType
-> = FieldDeclaration<TType, TFieldName> & {
+export type FieldProps<TType extends FormShape, TFieldName extends keyof TType> = FieldDeclaration<
+  TType,
+  TFieldName
+> & {
   readonly isRequired: boolean;
   readonly isDisabled: boolean;
   readonly hasBeenTouched: boolean;
@@ -27,7 +27,7 @@ type HelperText = {
   readonly isError: boolean;
 };
 
-const Field = <TType extends FormShape, TFieldName extends string & keyof TType>({
+const Field = <TType extends FormShape, TFieldName extends keyof TType>({
   hasBeenTouched,
   value,
   error,
@@ -39,10 +39,10 @@ const Field = <TType extends FormShape, TFieldName extends string & keyof TType>
   ...field
 }: FieldProps<TType, TFieldName>) => {
   const onChangeHandler = useCallback(
-    (newValue: TType[TFieldName]) => {
+    (newValue: unknown) => {
       onChangeField(field.name, newValue);
     },
-    [onChangeField, field.name]
+    [field, onChangeField]
   );
 
   const onBlurHandler = useCallback(() => {

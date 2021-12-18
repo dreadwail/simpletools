@@ -13,17 +13,17 @@ import {
   Width,
   Direction,
   Alignment,
-  isBlockDeclaration,
+  isFieldDeclaration,
   FormShape,
 } from './types';
 
 export type FieldBlockProps<TType extends FormShape> = {
-  readonly block: BlockDeclaration<TType> | FieldDeclaration<TType, string & keyof TType>;
+  readonly block: BlockDeclaration<TType> | FieldDeclaration<TType, keyof TType>;
   readonly values: Partial<TType>;
   readonly errors: Errors<TType>;
   readonly touched: Touched<TType>;
-  readonly onChangeField: FieldProps<TType, string & keyof TType>['onChangeField'];
-  readonly onBlurField: FieldProps<TType, string & keyof TType>['onBlurField'];
+  readonly onChangeField: FieldProps<TType, keyof TType>['onChangeField'];
+  readonly onBlurField: FieldProps<TType, keyof TType>['onBlurField'];
 };
 
 const cssJustifications: Record<Alignment, GridJustification> = {
@@ -112,7 +112,7 @@ const FieldBlock = <TType extends FormShape>({
   onChangeField,
   onBlurField,
 }: FieldBlockProps<TType>) => {
-  if (!isBlockDeclaration(block)) {
+  if (isFieldDeclaration(block)) {
     const isRequired =
       typeof block.isRequired === 'boolean' ? block.isRequired : !!block.isRequired?.(values);
     const isDisabled =

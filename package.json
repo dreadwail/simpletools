@@ -16,7 +16,7 @@
     "redux-devtools-extension": "^2.13.9",
     "redux-thunk": "^2.3.0",
     "styled-components": "^5.3.3",
-    "typescript": "^4.3.5",
+    "typescript": "^4.5.4",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
@@ -137,14 +137,7 @@
       "@typescript-eslint/no-dupe-class-members": "error",
       "@typescript-eslint/no-duplicate-imports": "error",
       "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/no-extra-parens": [
-        "error",
-        "all",
-        {
-          "ignoreJSX": "all",
-          "enforceForArrowConditionals": false
-        }
-      ],
+      "@typescript-eslint/no-extra-parens": "off",
       "@typescript-eslint/no-extra-semi": "error",
       "@typescript-eslint/no-loop-func": "error",
       "@typescript-eslint/no-redeclare": "error",
