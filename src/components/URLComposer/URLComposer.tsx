@@ -11,10 +11,11 @@ import { FC, useCallback, useMemo, useState } from 'react';
 
 import Form, {
   BlockDeclaration,
-  FieldDeclaration,
+  BlockDirection,
   ControlType,
+  DataType,
+  FieldDeclaration,
   FormProps,
-  Direction,
   Width,
 } from '../Form';
 import Heading from '../Heading';
@@ -49,6 +50,7 @@ type URLComposerForm = {
 
 const pathField: FieldDeclaration<URLComposerForm, 'path'> = {
   controlType: ControlType.INPUT,
+  dataType: DataType.TEXT,
   name: 'path',
   width: Width.HALF,
   label: 'Path',
@@ -62,6 +64,7 @@ const pathField: FieldDeclaration<URLComposerForm, 'path'> = {
 
 const fragmentField: FieldDeclaration<URLComposerForm, 'fragment'> = {
   controlType: ControlType.INPUT,
+  dataType: DataType.TEXT,
   name: 'fragment',
   width: Width.HALF,
   isRequired: false,
@@ -70,6 +73,7 @@ const fragmentField: FieldDeclaration<URLComposerForm, 'fragment'> = {
 
 const queryParamsField: FieldDeclaration<URLComposerForm, 'queryParams'> = {
   controlType: ControlType.LIST,
+  dataTypes: [DataType.TEXT, DataType.TEXT],
   name: 'queryParams',
   width: Width.FULL,
   isRequired: false,
@@ -80,6 +84,7 @@ const queryParamsField: FieldDeclaration<URLComposerForm, 'queryParams'> = {
 
 const usernameField: FieldDeclaration<URLComposerForm, 'username'> = {
   controlType: ControlType.INPUT,
+  dataType: DataType.TEXT,
   name: 'username',
   width: Width.HALF,
   label: 'Username',
@@ -87,58 +92,64 @@ const usernameField: FieldDeclaration<URLComposerForm, 'username'> = {
 
 const passwordField: FieldDeclaration<URLComposerForm, 'password'> = {
   controlType: ControlType.INPUT,
+  dataType: DataType.TEXT,
   name: 'password',
   width: Width.HALF,
   isRequired: false,
   label: 'Password',
 };
 
+const schemeField: FieldDeclaration<URLComposerForm, 'scheme'> = {
+  controlType: ControlType.SELECT,
+  dataType: DataType.TEXT,
+  name: 'scheme',
+  width: Width.QUARTER,
+  isRequired: true,
+  label: 'Scheme',
+  options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
+  initialValue: 'https://',
+  validate: value => {
+    if (value && !validSchemes.includes(value)) {
+      return 'Invalid scheme';
+    }
+  },
+};
+
+const hostField: FieldDeclaration<URLComposerForm, 'host'> = {
+  controlType: ControlType.INPUT,
+  dataType: DataType.TEXT,
+  name: 'host',
+  width: Width.HALF,
+  isRequired: true,
+  label: 'Host',
+};
+
+const portField: FieldDeclaration<URLComposerForm, 'port'> = {
+  controlType: ControlType.INPUT,
+  dataType: DataType.NUMBER,
+  name: 'port',
+  width: Width.QUARTER,
+  isRequired: false,
+  label: 'Port',
+  initialValue: 443,
+};
+
 const fields: BlockDeclaration<URLComposerForm> = {
-  blocks: [
+  children: [
     {
       label: 'Connection',
-      direction: Direction.HORIZONTAL,
-      blocks: [
-        {
-          controlType: ControlType.SELECT,
-          name: 'scheme',
-          width: Width.QUARTER,
-          isRequired: true,
-          label: 'Scheme',
-          options: validSchemes.map(scheme => ({ label: scheme, value: scheme })),
-          initialValue: 'https://',
-          validate: value => {
-            if (value && !validSchemes.includes(value)) {
-              return 'Invalid scheme';
-            }
-          },
-        },
-        {
-          controlType: ControlType.INPUT,
-          name: 'host',
-          width: Width.HALF,
-          isRequired: true,
-          label: 'Host',
-        },
-        {
-          controlType: ControlType.INPUT,
-          name: 'port',
-          width: Width.QUARTER,
-          isRequired: false,
-          label: 'Port',
-          initialValue: 443,
-        },
-      ],
+      direction: BlockDirection.HORIZONTAL,
+      children: [schemeField, hostField, portField],
     },
     {
       label: 'Resource',
-      direction: Direction.HORIZONTAL,
-      blocks: [pathField, fragmentField],
+      direction: BlockDirection.HORIZONTAL,
+      children: [pathField, fragmentField],
     },
     {
       label: 'Credentials (Optional)',
-      direction: Direction.HORIZONTAL,
-      blocks: [usernameField, passwordField],
+      direction: BlockDirection.HORIZONTAL,
+      children: [usernameField, passwordField],
     },
     queryParamsField,
   ],

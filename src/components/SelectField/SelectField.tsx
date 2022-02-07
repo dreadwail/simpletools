@@ -9,7 +9,7 @@ type Option = {
   readonly value: string;
 };
 
-export type SelectProps = {
+export type SelectFieldProps = {
   readonly fullWidth?: boolean;
   readonly hasError?: boolean;
   readonly helperText?: string;
@@ -39,7 +39,7 @@ const Select = ({
   options,
   size,
   value = '',
-}: SelectProps) => {
+}: SelectFieldProps) => {
   const onChangeHandler = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       onChange?.(event.target.value);

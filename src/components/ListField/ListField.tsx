@@ -28,10 +28,9 @@ export type ListFieldProps = {
   readonly separator?: ReactNode;
   readonly size?: TextFieldProps['size'];
   readonly value?: string[][];
-  readonly visualGap?: number;
 };
 
-const DEFAULT_GAP = 1;
+const GAP = 0.5;
 
 const ListField = ({
   fields,
@@ -45,7 +44,6 @@ const ListField = ({
   separator,
   size,
   value = [],
-  visualGap = DEFAULT_GAP,
 }: ListFieldProps) => {
   const normalizedFields = useMemo(() => fields ?? [label], [label, fields]);
   const initialTupleToAdd = useMemo(
@@ -160,16 +158,16 @@ const ListField = ({
 
   return (
     <Box display="flex" flexDirection="column" width="100%">
-      <FieldSet label={label} helperText={helperText} visualGap={visualGap}>
+      <FieldSet label={label} helperText={helperText} visualGap={GAP}>
         <Grid container alignItems="center">
           <Grid container item xs>
             {normalizedFields.map((field, index) => (
               <Fragment key={field}>
                 <Grid item xs={12} sm>
                   <Box
-                    pl={isLargeScreen && index > 0 ? visualGap : 0}
-                    pr={isLargeScreen && index < normalizedFields.length ? visualGap : 0}
-                    pb={visualGap}
+                    pl={isLargeScreen && index > 0 ? GAP : 0}
+                    pr={isLargeScreen && index < normalizedFields.length ? GAP : 0}
+                    pb={GAP}
                   >
                     <TextField
                       isRequired={isRequired && isLastField(index)}

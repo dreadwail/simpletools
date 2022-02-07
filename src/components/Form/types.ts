@@ -1,21 +1,27 @@
 import type { ReactNode } from 'react';
 
-export type Scalar = string | number;
-export type Tuple = Scalar[];
-export type TupleList = Tuple[];
-export type FormValue = Scalar | TupleList;
+type Scalar = string | number;
+type Tuple = Scalar[];
+type TupleList = Tuple[];
+type FormValue = Scalar | TupleList;
 
-export type FormShape = { [key: string]: FormValue };
+export type FormValues = { [key: string]: FormValue };
+
+export type Values<TFormValues extends FormValues> = Partial<TFormValues>;
 
 export type ErrorMessage = string;
-export type Errors<TType extends FormShape> = { [key in keyof TType]?: ErrorMessage };
 
-export type Touched<TType extends FormShape> = { [key in keyof TType]?: boolean };
-
-export enum Direction {
-  HORIZONTAL = 'horizontal',
-  VERTICAL = 'vertical',
+export enum ControlType {
+  INPUT = 'input',
+  SELECT = 'select',
+  LIST = 'list',
 }
+
+export enum DataType {
+  TEXT = 'text',
+  NUMBER = 'number',
+}
+
 export enum Width {
   THIRD = 'third',
   QUARTER = 'quarter',
@@ -25,96 +31,99 @@ export enum Width {
   FULL = 'full',
 }
 
-export enum Alignment {
-  START = 'start',
-  CENTER = 'center',
-  END = 'end',
-}
-
-export enum ControlType {
-  INPUT,
-  SELECT,
-  LIST,
-}
-
-type Validator<TType extends FormShape, TFieldName extends keyof TType> = (
-  value: Partial<TType>[TFieldName],
-  values: Partial<TType>
+type Validator<TFormValues extends FormValues, TFieldName extends keyof TFormValues> = (
+  value: TFormValues[TFieldName] | undefined,
+  values: Partial<TFormValues>
 ) => ErrorMessage | null | void;
 
-/*
-make it so that if a field is non-optional in TS, must be required (and optional may or may not)
-make the declaration of a field on its own work nicely
-make the declaration of a block with contained fields work nicely
-*/
+type ValuesBasedBoolean<TFormValues extends FormValues> = (values: Partial<TFormValues>) => boolean;
 
-// type GetFirstArgumentOfAnyFunction<T> = T extends (
-//   first: infer FirstArgument,
-//   ...args: any[]
-// ) => any
-//   ? FirstArgument
-//   : never
+type IsRequired<
+  TFormValues extends FormValues,
+  TFieldName extends keyof TFormValues
+> = TFormValues[TFieldName] extends NonNullable<TFormValues[TFieldName]>
+  ? true
+  : boolean | ValuesBasedBoolean<TFormValues>;
 
-export type InputFieldDeclaration<TType extends FormShape, TFieldName extends keyof TType> = {
+type IsDisabled<TFormValues extends FormValues> = boolean | ValuesBasedBoolean<TFormValues>;
+
+type ListTupleType<T extends unknown[][]> = T extends (infer TupleType)[] ? TupleType : never;
+
+type TypeDataType<T> = T extends unknown[][]
+  ? TypeDataType<ListTupleType<T>>
+  : T extends unknown[]
+  ? { [Index in keyof T]: TypeDataType<T[Index]> }
+  : T extends number
+  ? DataType.NUMBER
+  : T extends string
+  ? DataType.TEXT
+  : never;
+
+type InputFieldDeclaration<TFormValues extends FormValues, TFieldName extends keyof TFormValues> = {
   readonly controlType: ControlType.INPUT;
+  readonly dataType: TypeDataType<TFormValues[TFieldName]>;
   readonly helperText?: string;
-  readonly initialValue?: TType[TFieldName];
-  readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
-  readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
+  readonly initialValue?: TFormValues[TFieldName];
+  readonly isDisabled?: IsDisabled<TFormValues>;
+  readonly isRequired?: IsRequired<TFormValues, TFieldName>;
   readonly label: string;
   readonly name: string & TFieldName;
   readonly prefix?: ReactNode;
   readonly suffix?: ReactNode;
-  readonly validate?: Validator<TType, TFieldName>;
+  readonly validate?: Validator<TFormValues, TFieldName>;
   readonly width?: Width;
 };
 
-export type SelectOption = {
+type SelectOption = {
   readonly label: string;
   readonly value: string;
 };
 
-export type SelectFieldDeclaration<TType extends FormShape, TFieldName extends keyof TType> = {
+type SelectFieldDeclaration<
+  TFormValues extends FormValues,
+  TFieldName extends keyof TFormValues
+> = {
   readonly controlType: ControlType.SELECT;
+  readonly dataType: TypeDataType<TFormValues[TFieldName]>;
   readonly helperText?: string;
-  readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
-  readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
-  readonly initialValue?: TType[TFieldName];
+  readonly isDisabled?: IsDisabled<TFormValues>;
+  readonly isRequired?: IsRequired<TFormValues, TFieldName>;
+  readonly initialValue?: TFormValues[TFieldName];
   readonly label: string;
   readonly name: string & TFieldName;
   readonly options: SelectOption[];
-  readonly validate?: Validator<TType, TFieldName>;
+  readonly validate?: Validator<TFormValues, TFieldName>;
   readonly width?: Width;
 };
 
-export type TupleListFieldDeclaration<TType extends FormShape, TFieldName extends keyof TType> = {
+type TupleListFieldDeclaration<
+  TFormValues extends FormValues,
+  TFieldName extends keyof TFormValues
+> = {
   readonly controlType: ControlType.LIST;
+  readonly dataTypes: TypeDataType<TFormValues[TFieldName]>;
   readonly fields?: string[];
   readonly helperText?: string;
-  readonly initialValue?: TType[TFieldName];
-  readonly isDisabled?: boolean | ((values: Partial<TType>) => boolean);
-  readonly isRequired?: boolean | ((values: Partial<TType>) => boolean);
+  readonly initialValue?: TFormValues[TFieldName];
+  readonly isDisabled?: IsDisabled<TFormValues>;
+  readonly isRequired?: IsRequired<TFormValues, TFieldName>;
   readonly label: string;
   readonly name: string & TFieldName;
   readonly separator?: ReactNode;
-  readonly validate?: Validator<TType, TFieldName>;
+  readonly validate?: Validator<TFormValues, TFieldName>;
   readonly width?: Width;
 };
 
-export type FieldDeclaration<TType extends FormShape, TFieldName extends keyof TType> =
-  | InputFieldDeclaration<TType, TFieldName>
-  | SelectFieldDeclaration<TType, TFieldName>
-  | TupleListFieldDeclaration<TType, TFieldName>;
+export type FieldDeclaration<
+  TFormValues extends FormValues,
+  TFieldName extends keyof TFormValues = keyof TFormValues
+> = TFieldName extends keyof TFormValues
+  ?
+      | InputFieldDeclaration<TFormValues, TFieldName>
+      | SelectFieldDeclaration<TFormValues, TFieldName>
+      | TupleListFieldDeclaration<TFormValues, TFieldName>
+  : never;
 
-export type BlockDeclaration<TType extends FormShape> = {
-  readonly direction?: Direction;
-  readonly alignment?: Alignment;
-  readonly width?: Width;
-  readonly label?: string;
-  readonly blocks: (FieldDeclaration<TType, keyof TType> | BlockDeclaration<TType>)[];
+export type Fields<TFormValues extends FormValues> = {
+  [TFieldName in keyof TFormValues]?: FieldDeclaration<TFormValues, TFieldName>;
 };
-
-export const isFieldDeclaration = <TType extends FormShape, TFieldName extends keyof TType>(
-  block: FieldDeclaration<TType, TFieldName> | BlockDeclaration<TType>
-): block is FieldDeclaration<TType, TFieldName> =>
-  !!(block as FieldDeclaration<TType, TFieldName>).name;

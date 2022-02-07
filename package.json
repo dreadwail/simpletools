@@ -116,19 +116,7 @@
         "error",
         "never"
       ],
-      "@typescript-eslint/indent": [
-        "error",
-        2,
-        {
-          "SwitchCase": 1,
-          "flatTernaryExpressions": true,
-          "ignoredNodes": [
-            "TSTypeParameterInstantiation",
-            "TSIntersectionType",
-            "ConditionalExpression"
-          ]
-        }
-      ],
+      "@typescript-eslint/indent": "off",
       "@typescript-eslint/init-declarations": [
         "error",
         "always"
