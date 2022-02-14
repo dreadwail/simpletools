@@ -3,17 +3,12 @@ import Grid, { GridDirection, GridJustification, GridSize } from '@material-ui/c
 import { FC, useEffect, useMemo } from 'react';
 
 import FieldSet from '../FieldSet';
-
-import { ErrorMessage, Fields, FieldDeclaration, FormValues, Width } from './types';
-import useFormState, { FormState } from './useFormState';
-
-// import type { FC } from 'react';
-// import Field, { FieldProps } from './Field';
-// import { BlockDeclaration, FormValues, Width, Direction, Alignment } from './types';
 // import ListField, { ListFieldProps } from '../ListField';
 // import SelectField, { SelectFieldProps } from '../SelectField';
 // import TextField, { TextFieldProps } from '../TextField';
-// import { ControlType } from './types';
+
+import { ErrorMessage, Fields, FieldDeclaration, FormValues, Width } from './types';
+import useFormState, { FormState } from './useFormState';
 
 export enum BlockDirection {
   HORIZONTAL = 'horizontal',
@@ -25,17 +20,6 @@ export enum BlockAlignment {
   CENTER = 'center',
   END = 'end',
 }
-
-// type DistributiveOmit<T, K extends keyof T> = T extends unknown
-//     ? Omit<T, K>
-//     : never;
-
-// type BlockChild<
-//   TFormValues extends FormValues,
-//   TFieldName = never
-// > = TFieldName extends keyof TFormValues
-//   ? FieldDeclaration<TFormValues, TFieldName>
-//   : BlockDeclaration<TFormValues>;
 
 export type BlockDeclaration<TFormValues extends FormValues, TFieldName = keyof TFormValues> = {
   readonly direction?: BlockDirection;
@@ -186,7 +170,17 @@ const FieldBlock = <TFormValues extends FormValues>({
       <GridBlock isContainer={false} width={blockChild.width}>
         <Box my={GAP} mr={GAP}>
           field '{blockChild.name}' here
-          {/* <Field {...props.field} /> */}
+          {/*
+            case ControlType.INPUT:
+              return (
+                <TextField
+            case ControlType.SELECT:
+              return (
+                <SelectField
+            case ControlType.LIST:
+              return (
+                <ListField
+          */}
         </Box>
       </GridBlock>
     );
@@ -239,16 +233,6 @@ const FieldBlock = <TFormValues extends FormValues>({
     </GridBlock>
   );
 };
-//
-//     case ControlType.INPUT:
-//       return (
-//         <TextField
-//     case ControlType.SELECT:
-//       return (
-//         <SelectField
-//     case ControlType.LIST:
-//       return (
-//         <ListField
 
 const Form = <TFormValues extends FormValues>({
   fields: block,
