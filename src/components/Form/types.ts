@@ -33,10 +33,10 @@ export enum Width {
 
 type Validator<TFormValues extends FormValues, TFieldName extends keyof TFormValues> = (
   value: TFormValues[TFieldName] | undefined,
-  values: Partial<TFormValues>
+  values: Values<TFormValues>
 ) => ErrorMessage | null | void;
 
-type ValuesBasedBoolean<TFormValues extends FormValues> = (values: Partial<TFormValues>) => boolean;
+type ValuesBasedBoolean<TFormValues extends FormValues> = (values: Values<TFormValues>) => boolean;
 
 type IsRequired<
   TFormValues extends FormValues,
@@ -116,13 +116,11 @@ type TupleListFieldDeclaration<
 
 export type FieldDeclaration<
   TFormValues extends FormValues,
-  TFieldName extends keyof TFormValues = keyof TFormValues
-> = TFieldName extends keyof TFormValues
-  ?
-      | InputFieldDeclaration<TFormValues, TFieldName>
-      | SelectFieldDeclaration<TFormValues, TFieldName>
-      | TupleListFieldDeclaration<TFormValues, TFieldName>
-  : never;
+  TFieldName extends keyof TFormValues
+> =
+  | InputFieldDeclaration<TFormValues, TFieldName>
+  | SelectFieldDeclaration<TFormValues, TFieldName>
+  | TupleListFieldDeclaration<TFormValues, TFieldName>;
 
 export type Fields<TFormValues extends FormValues> = {
   [TFieldName in keyof TFormValues]?: FieldDeclaration<TFormValues, TFieldName>;

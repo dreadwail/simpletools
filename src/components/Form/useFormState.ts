@@ -11,7 +11,7 @@ type FieldStrings<TFormValues extends FormValues> = {
   [TFieldName in keyof TFormValues]?: string;
 };
 
-type FormState<TFormValues extends FormValues> = {
+export type FormState<TFormValues extends FormValues> = {
   readonly errors: FieldBooleans<TFormValues>;
   readonly helperTexts: FieldStrings<TFormValues>;
   readonly values: Values<TFormValues>;
@@ -141,10 +141,7 @@ const formStateReducer = <TFormValues extends FormValues>(
 
       return process(fields, {
         ...state,
-        touched: {
-          ...state.touched,
-          [name]: true,
-        },
+        touched: { ...state.touched, [name]: true },
         values: { ...state.values, [name]: value },
       });
     }
@@ -153,10 +150,7 @@ const formStateReducer = <TFormValues extends FormValues>(
 
       return process(fields, {
         ...state,
-        touched: {
-          ...state.touched,
-          [name]: true,
-        },
+        touched: { ...state.touched, [name]: true },
       });
     }
     default:
@@ -173,13 +167,7 @@ const buildInitialFormState = <TFormValues extends FormValues>(
       if (!field) {
         return memo;
       }
-      return {
-        ...memo,
-        values: {
-          ...memo.values,
-          [fieldName]: field.initialValue,
-        },
-      };
+      return { ...memo, values: { ...memo.values, [fieldName]: field.initialValue } };
     },
     {
       errors: {},
