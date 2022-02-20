@@ -125,3 +125,11 @@ export type FieldDeclaration<
 export type Fields<TFormValues extends FormValues> = {
   [TFieldName in keyof TFormValues]?: FieldDeclaration<TFormValues, TFieldName>;
 };
+
+export type FieldBooleans<TFormValues extends FormValues> = {
+  [TFieldName in keyof TFormValues]?: boolean;
+};
+
+export type FieldStrings<TFormValues extends FormValues> = {
+  [TFieldName in keyof TFormValues]?: string;
+};

@@ -3,11 +3,19 @@ import Grid, { GridDirection, GridJustification, GridSize } from '@material-ui/c
 import { FC, useEffect, useMemo } from 'react';
 
 import FieldSet from '../FieldSet';
-// import ListField, { ListFieldProps } from '../ListField';
-// import SelectField, { SelectFieldProps } from '../SelectField';
-// import TextField, { TextFieldProps } from '../TextField';
+import ListField from '../ListField';
+import SelectField from '../SelectField';
+import TextField from '../TextField';
 
-import { ErrorMessage, Fields, FieldDeclaration, FormValues, Width } from './types';
+import {
+  Fields,
+  FieldDeclaration,
+  FormValues,
+  Width,
+  ControlType,
+  FieldBooleans,
+  DataType,
+} from './types';
 import useFormState, { FormState } from './useFormState';
 
 export enum BlockDirection {
@@ -21,7 +29,10 @@ export enum BlockAlignment {
   END = 'end',
 }
 
-export type BlockDeclaration<TFormValues extends FormValues, TFieldName = keyof TFormValues> = {
+export type BlockDeclaration<
+  TFormValues extends FormValues,
+  TFieldName extends keyof TFormValues = keyof TFormValues
+> = {
   readonly direction?: BlockDirection;
   readonly alignment?: BlockAlignment;
   readonly width?: Width;
@@ -32,23 +43,19 @@ export type BlockDeclaration<TFormValues extends FormValues, TFieldName = keyof 
   )[];
 };
 
-type BlockChild<TFormValues extends FormValues, TFieldName = keyof TFormValues> = BlockDeclaration<
-  TFormValues,
-  TFieldName
->['children'][number];
+type BlockChild<
+  TFormValues extends FormValues,
+  TFieldName extends keyof TFormValues = keyof TFormValues
+> = BlockDeclaration<TFormValues, TFieldName>['children'][number];
 
-const isBlockDeclaration = <TFormValues extends FormValues, TFieldName>(
+const isBlockDeclaration = <TFormValues extends FormValues, TFieldName extends keyof TFormValues>(
   suspect: BlockChild<TFormValues, TFieldName>
 ): suspect is BlockDeclaration<TFormValues, TFieldName> =>
   !!(suspect as BlockDeclaration<TFormValues, TFieldName>).children;
 
-type Errors<TFormValues extends FormValues> = {
-  [TFieldName in keyof TFormValues]?: ErrorMessage;
-};
-
 type OnFormChange<TFormValues extends FormValues> = (payload: {
   readonly values: Partial<TFormValues>;
-  readonly errors: Errors<TFormValues>;
+  readonly errors: FieldBooleans<TFormValues>;
   readonly isValid: boolean;
 }) => void;
 
@@ -146,41 +153,106 @@ const GridBlock: FC<GridBlockProps> = ({
 
 const GAP = 0.5;
 
-// type SizeableFieldProps = FieldProps & {
-//   readonly width?: Width;
-// };
-
-type FieldBlockProps<TFormValues extends FormValues> = {
+type FieldBlockProps<TFormValues extends FormValues> = FormState<TFormValues> & {
   readonly blockChild: BlockChild<TFormValues>;
-  readonly values: FormState<TFormValues>['values'];
-  readonly errors: FormState<TFormValues>['errors'];
-  readonly helperTexts: FormState<TFormValues>['helperTexts'];
-  // readonly onChangeField: FieldProps<TType, keyof TType>['onChangeField'];
-  // readonly onBlurField: FieldProps<TType, keyof TType>['onBlurField'];
 };
 
 const FieldBlock = <TFormValues extends FormValues>({
   blockChild,
-  values,
-  errors,
-  helperTexts,
+  ...formState
 }: FieldBlockProps<TFormValues>) => {
   if (!isBlockDeclaration(blockChild)) {
     return (
       <GridBlock isContainer={false} width={blockChild.width}>
         <Box my={GAP} mr={GAP}>
-          field '{blockChild.name}' here
-          {/*
-            case ControlType.INPUT:
-              return (
-                <TextField
-            case ControlType.SELECT:
-              return (
-                <SelectField
-            case ControlType.LIST:
-              return (
-                <ListField
-          */}
+          {() => {
+            switch (blockChild.controlType) {
+              case ControlType.INPUT:
+                return (
+                  <TextField
+                    hasError={formState.errors[blockChild.name]}
+                    helperText={formState.helperTexts[blockChild.name]}
+                    isDisabled={formState.isFieldDisabled(blockChild.name)}
+                    isRequired={formState.isFieldRequired(blockChild.name)}
+                    label={blockChild.label}
+                    name={blockChild.name}
+                    onBlur={() => formState.onBlur(blockChild.name)}
+                    onChange={newValue => {
+                      switch (blockChild.dataType) {
+                        case DataType.NUMBER: {
+                          formState.onChange(
+                            blockChild.name,
+                            parseFloat(newValue) as TFormValues[keyof TFormValues]
+                          );
+                          break;
+                        }
+                        default: {
+                          formState.onChange(
+                            blockChild.name,
+                            newValue as TFormValues[keyof TFormValues]
+                          );
+                          break;
+                        }
+                      }
+                    }}
+                    prefix={blockChild.prefix}
+                    suffix={blockChild.suffix}
+                    value={`${formState.values[blockChild.name]}`}
+                  />
+                );
+              case ControlType.SELECT:
+                return (
+                  <SelectField
+                    hasError={formState.errors[blockChild.name]}
+                    helperText={formState.helperTexts[blockChild.name]}
+                    isDisabled={formState.isFieldDisabled(blockChild.name)}
+                    isRequired={formState.isFieldRequired(blockChild.name)}
+                    label={blockChild.label}
+                    name={blockChild.name}
+                    onBlur={() => formState.onBlur(blockChild.name)}
+                    onChange={newValue => {
+                      switch (blockChild.dataType) {
+                        case DataType.NUMBER: {
+                          formState.onChange(
+                            blockChild.name,
+                            parseFloat(newValue) as TFormValues[keyof TFormValues]
+                          );
+                          break;
+                        }
+                        default: {
+                          formState.onChange(
+                            blockChild.name,
+                            newValue as TFormValues[keyof TFormValues]
+                          );
+                          break;
+                        }
+                      }
+                    }}
+                    options={blockChild.options}
+                    value={`${formState.values[blockChild.name]}`}
+                  />
+                );
+              case ControlType.LIST:
+                return (
+                  <ListField
+                    fields={blockChild.fields}
+                    hasError={formState.errors[blockChild.name]}
+                    helperText={formState.helperTexts[blockChild.name]}
+                    isDisabled={formState.isFieldDisabled(blockChild.name)}
+                    isRequired={formState.isFieldRequired(blockChild.name)}
+                    label={blockChild.label}
+                    onBlur={() => formState.onBlur(blockChild.name)}
+                    onChange={newValue => {
+                      // TODO
+                    }}
+                    separator={blockChild.separator}
+                    value={formState.values[blockChild.name] as string[][] | undefined}
+                  />
+                );
+              default:
+                return null;
+            }
+          }}
         </Box>
       </GridBlock>
     );
@@ -194,13 +266,7 @@ const FieldBlock = <TFormValues extends FormValues>({
       direction={blockChild.direction}
     >
       {blockChild.children.map((subBlock, index) => (
-        <FieldBlock<TFormValues>
-          key={index}
-          blockChild={subBlock}
-          values={values}
-          errors={errors}
-          helperTexts={helperTexts}
-        />
+        <FieldBlock<TFormValues> key={index} blockChild={subBlock} {...formState} />
       ))}
     </GridBlock>
   );
@@ -239,7 +305,8 @@ const Form = <TFormValues extends FormValues>({
   onChange,
 }: FormProps<TFormValues>) => {
   const fields = useMemo(() => extractFields(block), [block]);
-  const { values, errors, helperTexts, isValid /* , onChange, onBlur */ } = useFormState(fields);
+  const formState = useFormState(fields);
+  const { values, errors, helperTexts, isValid /* , onChange, onBlur */ } = formState;
 
   useEffect(() => {
     onChange({ values, errors, isValid });
@@ -247,7 +314,7 @@ const Form = <TFormValues extends FormValues>({
 
   return (
     <>
-      <FieldBlock blockChild={block} values={values} errors={errors} helperTexts={helperTexts} />
+      <FieldBlock blockChild={block} {...formState} />
       <pre>{JSON.stringify({ values, errors, helperTexts, isValid }, null, 2)}</pre>
     </>
   );

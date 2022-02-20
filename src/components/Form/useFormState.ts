@@ -1,17 +1,9 @@
 import isEmpty from 'lodash/isEmpty';
 import { Reducer, useCallback, useMemo, useReducer } from 'react';
 
-import type { Fields, FormValues, Values } from './types';
+import type { FieldBooleans, Fields, FieldStrings, FormValues, Values } from './types';
 
-type FieldBooleans<TFormValues extends FormValues> = {
-  [TFieldName in keyof TFormValues]?: boolean;
-};
-
-type FieldStrings<TFormValues extends FormValues> = {
-  [TFieldName in keyof TFormValues]?: string;
-};
-
-export type FormState<TFormValues extends FormValues> = {
+type FieldsState<TFormValues extends FormValues> = {
   readonly errors: FieldBooleans<TFormValues>;
   readonly helperTexts: FieldStrings<TFormValues>;
   readonly values: Values<TFormValues>;
@@ -56,9 +48,9 @@ const isFieldDisabled = <TFormValues extends FormValues>(
 
 const process = <TFormValues extends FormValues>(
   fields: Fields<TFormValues>,
-  formState: FormState<TFormValues>
-): FormState<TFormValues> =>
-  Object.keys(fields).reduce<FormState<TFormValues>>((state, fieldName) => {
+  formState: FieldsState<TFormValues>
+): FieldsState<TFormValues> =>
+  Object.keys(fields).reduce<FieldsState<TFormValues>>((state, fieldName) => {
     const field = fields[fieldName];
     if (!field) {
       return state;
@@ -100,7 +92,7 @@ type OnChangeAction<TFormValues extends FormValues, TFieldName extends keyof TFo
   readonly type: 'CHANGED';
   readonly payload: {
     readonly name: TFieldName;
-    readonly value: TFormValues[TFieldName];
+    readonly value: TFormValues[TFieldName] | undefined;
     readonly fields: Fields<TFormValues>;
   };
 };
@@ -132,9 +124,9 @@ type FormStateAction<TFormValues extends FormValues> =
   | OnBlurAction<TFormValues, keyof TFormValues>;
 
 const formStateReducer = <TFormValues extends FormValues>(
-  state: FormState<TFormValues>,
+  state: FieldsState<TFormValues>,
   action: FormStateAction<TFormValues>
-): FormState<TFormValues> => {
+): FieldsState<TFormValues> => {
   switch (action.type) {
     case 'CHANGED': {
       const { name, value, fields } = action.payload;
@@ -158,10 +150,10 @@ const formStateReducer = <TFormValues extends FormValues>(
   }
 };
 
-const buildInitialFormState = <TFormValues extends FormValues>(
+const buildInitialFieldsState = <TFormValues extends FormValues>(
   fields: Fields<TFormValues>
-): FormState<TFormValues> => {
-  const initialFormState = Object.keys(fields).reduce<FormState<TFormValues>>(
+): FieldsState<TFormValues> => {
+  const initialFormState = Object.keys(fields).reduce<FieldsState<TFormValues>>(
     (memo, fieldName) => {
       const field = fields[fieldName];
       if (!field) {
@@ -179,16 +171,32 @@ const buildInitialFormState = <TFormValues extends FormValues>(
   return process(fields, initialFormState);
 };
 
-const useFormState = <TFormValues extends FormValues>(fields: Fields<TFormValues>) => {
-  const initialFormState = useMemo(() => buildInitialFormState(fields), [fields]);
+export type FormState<TFormValues extends FormValues> = {
+  readonly errors: FieldBooleans<TFormValues>;
+  readonly helperTexts: FieldStrings<TFormValues>;
+  readonly values: Values<TFormValues>;
+  onChange: <TFieldName extends keyof TFormValues>(
+    name: TFieldName,
+    value: TFormValues[TFieldName] | undefined
+  ) => void;
+  onBlur: (name: keyof TFormValues) => void;
+  isFieldDisabled: (fieldName: keyof TFormValues) => boolean;
+  isFieldRequired: (fieldName: keyof TFormValues) => boolean;
+  isValid: boolean;
+};
+
+const useFormState = <TFormValues extends FormValues>(
+  fields: Fields<TFormValues>
+): FormState<TFormValues> => {
+  const initialFieldsState = useMemo(() => buildInitialFieldsState(fields), [fields]);
 
   const [formState, dispatch] = useReducer<
-    Reducer<FormState<TFormValues>, FormStateAction<TFormValues>>
-  >(formStateReducer, initialFormState);
+    Reducer<FieldsState<TFormValues>, FormStateAction<TFormValues>>
+  >(formStateReducer, initialFieldsState);
 
   const errors = useMemo(
     () =>
-      Object.keys(formState.errors).reduce(
+      Object.keys(formState.errors).reduce<FieldBooleans<TFormValues>>(
         (memo, fieldName) => ({
           ...memo,
           [fieldName]: formState.errors[fieldName] ? formState.helperTexts[fieldName] : null,
@@ -203,7 +211,10 @@ const useFormState = <TFormValues extends FormValues>(fields: Fields<TFormValues
     helperTexts: formState.helperTexts,
     values: formState.values,
     onChange: useCallback(
-      <TFieldName extends keyof TFormValues>(name: TFieldName, value: TFormValues[TFieldName]) => {
+      <TFieldName extends keyof TFormValues>(
+        name: TFieldName,
+        value: TFormValues[TFieldName] | undefined
+      ) => {
         dispatch(onChangeAction({ name, value, fields }));
       },
       [fields]
