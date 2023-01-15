@@ -242,7 +242,7 @@ const FieldBlock = <TFormValues extends FormValues>({
                     isRequired={formState.isFieldRequired(blockChild.name)}
                     label={blockChild.label}
                     onBlur={() => formState.onBlur(blockChild.name)}
-                    onChange={newValue => {
+                    onChange={_newValue => {
                       // TODO
                     }}
                     separator={blockChild.separator}
